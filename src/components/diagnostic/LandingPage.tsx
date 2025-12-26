@@ -47,7 +47,7 @@ export const LandingPage = ({ onStart }: LandingPageProps) => {
               size="lg"
               className="gradient-datako text-primary-foreground hover:opacity-90 transition-opacity text-lg px-8 py-6 rounded-xl glow-datako animate-pulse-glow"
             >
-              Commencer le diagnostic
+              Démarrer le diagnostic
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </motion.div>
