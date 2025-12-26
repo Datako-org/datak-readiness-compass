@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button';
-import { ArrowRight, Shield, Clock, MessageCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Shield, Clock, MessageCircle } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface LandingPageProps {
   onStart: () => void;
@@ -12,27 +12,19 @@ export const LandingPage = ({ onStart }: LandingPageProps) => {
       {/* Header */}
       <header className="w-full py-6 px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="text-2xl font-display font-bold gradient-datako-text">
-            Datakö
-          </div>
-          <div className="text-sm text-muted-foreground">
-            Diagnostic Data & IA
-          </div>
+          <div className="text-2xl font-display font-bold gradient-datako-text">Datakö</div>
+          <div className="text-sm text-muted-foreground">Diagnostic Data & IA</div>
         </div>
       </header>
 
       {/* Hero Section */}
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <h1 className="text-4xl md:text-6xl font-display font-bold mb-6 leading-tight">
               <span className="gradient-datako-text">Diagnostic</span>
               <br />
-              <span className="text-foreground">Data & IA Readiness</span>
+              <span className="text-foreground">Data & IA – Datakö</span>
             </h1>
           </motion.div>
 
@@ -104,9 +96,7 @@ interface ReassuranceItemProps {
 
 const ReassuranceItem = ({ icon, title, description }: ReassuranceItemProps) => (
   <div className="flex flex-col items-center gap-3 p-6 rounded-xl bg-card border border-border hover:border-primary/50 transition-colors">
-    <div className="p-3 rounded-full bg-primary/10 text-primary">
-      {icon}
-    </div>
+    <div className="p-3 rounded-full bg-primary/10 text-primary">{icon}</div>
     <h3 className="font-semibold text-foreground">{title}</h3>
     <p className="text-sm text-muted-foreground text-center">{description}</p>
   </div>
