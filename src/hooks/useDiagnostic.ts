@@ -173,15 +173,15 @@ export const useDiagnostic = () => {
       // Create diagnostic
       const { data: diagnosticData, error: diagnosticError } = await supabase
         .from('diagnostics')
-        .insert({
+        .insert([{
           organization_id: orgData.id,
           respondent_id: respondentData.id,
           total_score: calculatedResult.totalScore,
           maturity_level: calculatedResult.maturityLevel,
-          axis_scores: calculatedResult.axisScores,
+          axis_scores: JSON.parse(JSON.stringify(calculatedResult.axisScores)),
           status: 'completed',
           completed_at: new Date().toISOString(),
-        })
+        }])
         .select()
         .single();
 
