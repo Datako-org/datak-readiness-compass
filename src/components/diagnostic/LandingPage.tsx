@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield, Clock, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
-import datakoLogo from "@/assets/datako-logo.png";
+import datakoLogo from "@/assets/datako-logo-white.png";
 
 interface LandingPageProps {
   onStart: () => void;
@@ -13,7 +13,7 @@ export const LandingPage = ({ onStart }: LandingPageProps) => {
       {/* Header */}
       <header className="w-full py-6 px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <img src={datakoLogo} alt="Datakö" className="h-10 w-auto" />
+          <img src={datakoLogo} alt="Datakö" className="h-8 w-auto" />
           <div className="text-sm text-muted-foreground">Diagnostic Data & IA</div>
         </div>
       </header>
