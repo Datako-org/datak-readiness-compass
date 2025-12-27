@@ -13,7 +13,7 @@ export const LandingPage = ({ onStart }: LandingPageProps) => {
       {/* Header */}
       <header className="w-full py-6 px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <img src={datakoLogo} alt="Datakö" className="h-20 w-auto" />
+          <img src={datakoLogo} alt="Datakö" className="h-25 w-auto" />
           <div className="text-sm text-muted-foreground">Diagnostic Data & IA</div>
         </div>
       </header>
