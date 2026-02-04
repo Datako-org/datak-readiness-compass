@@ -136,7 +136,12 @@ export const useDiagnostic = () => {
 
   const submitDiagnostic = useCallback(async () => {
     setIsSubmitting(true);
-    
+    console.log('📊 Diagnostic submission started', {
+      organization: formData.organization,
+      respondent: formData.respondent,
+      answersCount: Object.keys(formData.answers).length
+    });
+
     try {
       const calculatedResult = calculateResults();
 
@@ -153,6 +158,7 @@ export const useDiagnostic = () => {
         .single();
 
       if (orgError) throw orgError;
+      console.log('✅ Organization created:', orgData);
 
       // Create respondent
       const { data: respondentData, error: respondentError } = await supabase
@@ -169,6 +175,7 @@ export const useDiagnostic = () => {
         .single();
 
       if (respondentError) throw respondentError;
+      console.log('✅ Respondent created:', respondentData);
 
       // Create diagnostic
       const { data: diagnosticData, error: diagnosticError } = await supabase
@@ -186,6 +193,7 @@ export const useDiagnostic = () => {
         .single();
 
       if (diagnosticError) throw diagnosticError;
+      console.log('✅ Diagnostic created:', diagnosticData);
 
       // Store answers
       const answersToInsert = Object.entries(formData.answers).map(([questionId, answer]) => ({
@@ -221,7 +229,8 @@ export const useDiagnostic = () => {
       setResult({ ...calculatedResult, id: diagnosticData.id });
       nextStep();
     } catch (error) {
-      console.error('Error submitting diagnostic:', error);
+      console.error('❌ Submission failed:', error);
+      alert('Erreur lors de l\'envoi. Vérifiez la console.');
       throw error;
     } finally {
       setIsSubmitting(false);
