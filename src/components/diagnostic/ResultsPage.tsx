@@ -43,6 +43,32 @@ const MATURITY_LEVELS = {
 export const ResultsPage = ({ result, onRestart }: ResultsPageProps) => {
   const maturity = MATURITY_LEVELS[result.maturityLevel];
 
+  const handleContactEmail = () => {
+    const subject = encodeURIComponent('Demande de rendez-vous - Diagnostic Data & IA');
+    const body = encodeURIComponent(
+      `Bonjour,\n\nSuite à mon diagnostic Data & IA, je souhaite prendre rendez-vous avec un expert Datakö.\n\n` +
+      `Résultats du diagnostic :\n` +
+      `- Score global : ${result.percentage}%\n` +
+      `- Niveau de maturité : ${maturity.label}\n\n` +
+      `Cordialement`
+    );
+    window.open(`mailto:contact@datako.com?subject=${subject}&body=${body}`, '_blank');
+  };
+
+  const handleContactWhatsApp = () => {
+    const message = encodeURIComponent(
+      `Bonjour,\n\nSuite à mon diagnostic Data & IA sur Datakö, je souhaite prendre rendez-vous.\n\n` +
+      `Résultats :\n` +
+      `- Score : ${result.percentage}%\n` +
+      `- Niveau : ${maturity.label}`
+    );
+    window.open(`https://wa.me/00224000000?text=${message}`, '_blank');
+  };
+
+  const handleLearnMore = () => {
+    window.open('https://datakö.com', '_blank');
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -162,10 +188,23 @@ export const ResultsPage = ({ result, onRestart }: ResultsPageProps) => {
                 <h3 className="text-lg font-medium mb-2">{maturity.recommendation}</h3>
                 <p className="text-muted-foreground">{maturity.recommendationDesc}</p>
               </div>
-              <Button className="gradient-datako text-primary-foreground hover:opacity-90">
-                <Calendar className="mr-2 h-4 w-4" />
-                Prendre rendez-vous
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  className="gradient-datako text-primary-foreground hover:opacity-90"
+                  onClick={handleContactEmail}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Prendre rendez-vous (Email)
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border-green-500 text-green-500 hover:bg-green-500/10"
+                  onClick={handleContactWhatsApp}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  WhatsApp
+                </Button>
+              </div>
             </div>
           </motion.div>
 
@@ -180,7 +219,8 @@ export const ResultsPage = ({ result, onRestart }: ResultsPageProps) => {
               Un expert Datakö vous contactera sous 48h avec une analyse détaillée.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="outline" className="border-border">
+              <Button variant="outline" className="border-border"
+                onClick={() => window.open("https://datakö.com", "_blank")}>
                 <FileText className="mr-2 h-4 w-4" />
                 En savoir plus sur Datakö
               </Button>
