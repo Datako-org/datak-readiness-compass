@@ -11,10 +11,17 @@ export const LandingPage = ({ onStart }: LandingPageProps) => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="w-full py-6 px-8">
+      <header className="w-full py-6 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <img src={datakoLogo} alt="Datakö" className="h-20 w-auto" />
-          <div className="text-sm text-muted-foreground">Diagnostic Data & IA</div>
+          <a
+            href="https://datako.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 p-2 -m-2 rounded-lg transition-all duration-200 hover:opacity-80 hover:scale-[1.02]"
+          >
+            <img src={datakoLogo} alt="Datakö" className="h-20 sm:h-28 w-auto" />
+          </a>
+          <div className="text-xs sm:text-sm text-muted-foreground">Diagnostic Data & IA</div>
         </div>
       </header>
 
@@ -33,9 +40,18 @@ export const LandingPage = ({ onStart }: LandingPageProps) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto"
+            className="text-xl md:text-2xl text-muted-foreground mb-4 max-w-2xl mx-auto"
           >
             Évaluez votre maturité data et identifiez vos priorités d'action en moins de 8 minutes
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="text-sm text-muted-foreground/70 mb-12"
+          >
+            Conçu par Datakö <span className="text-xl leading-none align-middle">·</span> experts Data & IA
           </motion.p>
 
           <motion.div
@@ -46,7 +62,7 @@ export const LandingPage = ({ onStart }: LandingPageProps) => {
             <Button
               onClick={onStart}
               size="lg"
-              className="gradient-datako text-primary-foreground hover:opacity-90 transition-opacity text-lg px-8 py-6 rounded-xl glow-datako animate-pulse-glow"
+              className="gradient-datako text-primary-foreground text-lg px-8 py-6 rounded-xl transition-all duration-300 hover:shadow-[0_0_30px_hsl(var(--datako-glow)/0.35)] hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               Démarrer le diagnostic
               <ArrowRight className="ml-2 h-5 w-5" />
