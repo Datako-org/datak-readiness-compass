@@ -22,11 +22,13 @@ export interface DiagnosticAnswer {
   score: number;
 }
 
-export interface AxisScore {
-  axis: string;
+export interface DimensionScore {
+  dimension: string;
+  label: string;
   score: number;
   maxScore: number;
   percentage: number;
+  weight: number;
 }
 
 export interface DiagnosticResult {
@@ -34,8 +36,9 @@ export interface DiagnosticResult {
   totalScore: number;
   maxPossibleScore: number;
   percentage: number;
-  maturityLevel: 'debutant' | 'intermediaire' | 'avance';
-  axisScores: AxisScore[];
+  maturityLevel: 'debutant' | 'intermediaire' | 'avance' | 'expert';
+  dimensionScores: DimensionScore[];
+  sector: string;
 }
 
 export interface DiagnosticFormData {
@@ -47,13 +50,14 @@ export interface DiagnosticFormData {
 export interface Question {
   id: string;
   step: number;
-  axis: string;
+  dimension: string;
   sector?: string;
   question_text: string;
   question_type: 'single_choice' | 'multi_choice';
   options: QuestionOption[];
   max_score: number;
   order_index: number;
+  scoring_mode?: 'default' | 'count';
 }
 
 export interface QuestionOption {
@@ -62,10 +66,22 @@ export interface QuestionOption {
   score: number;
 }
 
+export interface SectorRecommendation {
+  title: string;
+  actions: string[];
+  impact: string;
+  roi?: string;
+}
+
 export const SECTORS = [
   { value: 'transport', label: 'Transport & Logistique' },
-  { value: 'retail', label: 'Retail & Commerce' },
+  { value: 'retail', label: 'Commerce & Distribution' },
+  { value: 'btp', label: 'BTP / Construction' },
   { value: 'energy', label: 'Énergie & Utilities' },
+  { value: 'sante', label: 'Santé / Pharmacie' },
+  { value: 'finance', label: 'Finance / Assurance' },
+  { value: 'services', label: 'Services' },
+  { value: 'autre', label: 'Autre' },
 ] as const;
 
 export const COMPANY_SIZES = [
@@ -76,7 +92,7 @@ export const COMPANY_SIZES = [
 ] as const;
 
 export const ROLES = [
-  { value: 'ceo', label: 'Direction Générale (CEO)' },
+  { value: 'ceo', label: 'Dirigeant / Gérant' },
   { value: 'ops', label: 'Opérations' },
   { value: 'it', label: 'IT / DSI' },
   { value: 'finance', label: 'Finance / DAF' },
@@ -84,18 +100,13 @@ export const ROLES = [
 ] as const;
 
 export const COUNTRIES = [
+  { value: 'guinée', label: 'Guinée' },
   { value: 'france', label: 'France' },
-  { value: 'belgique', label: 'Belgique' },
-  { value: 'suisse', label: 'Suisse' },
-  { value: 'canada', label: 'Canada' },
-  { value: 'luxembourg', label: 'Luxembourg' },
   { value: 'other', label: 'Autre' },
 ] as const;
 
-export const AXES = [
-  { id: 'data_foundations', label: 'Fondations Data', maxScore: 20 },
-  { id: 'tooling', label: 'Outillage', maxScore: 20 },
-  { id: 'governance', label: 'Gouvernance & Processus', maxScore: 20 },
-  { id: 'bi_analytics', label: 'BI & Analytics', maxScore: 20 },
-  { id: 'ai_automation', label: 'IA & Automatisation', maxScore: 20 },
+export const DIMENSIONS = [
+  { id: 'data', label: 'État des données', weight: 0.40 },
+  { id: 'pilotage', label: 'Pilotage & Performance', weight: 0.40 },
+  { id: 'automation', label: 'Automatisation & IA', weight: 0.20 },
 ] as const;

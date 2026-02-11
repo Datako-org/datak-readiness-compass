@@ -9,10 +9,8 @@ import { ResultsPage } from '@/components/diagnostic/ResultsPage';
 
 const STEP_TITLES: Record<number, { title: string; subtitle?: string }> = {
   2: { title: 'Fondations Data', subtitle: 'Évaluons la maturité de vos données' },
-  3: { title: 'Module Sectoriel', subtitle: 'Questions spécifiques à votre secteur' },
-  4: { title: 'BI & Analytics', subtitle: 'Vos pratiques analytiques' },
-  5: { title: 'IA & Automatisation', subtitle: 'Votre niveau d\'automatisation' },
-  6: { title: 'Contraintes & Priorités', subtitle: 'Vos objectifs et budget' },
+  3: { title: 'BI & Analytics', subtitle: 'Vos pratiques de pilotage et reporting' },
+  4: { title: 'IA & Automation', subtitle: 'Votre niveau d\'automatisation' },
 };
 
 const Index = () => {
@@ -30,8 +28,8 @@ const Index = () => {
     resetDiagnostic,
   } = useDiagnostic();
 
-  // Total steps: landing (0) + company profile (1) + 5 question steps (2-6) + contact (7)
-  const totalSteps = 7;
+  // Total steps: contexte (1) + données (2) + pilotage (3) + automatisation (4) + contact (5)
+  const totalSteps = 5;
 
   // Step 0: Landing page
   if (currentStep === 0) {
@@ -43,7 +41,7 @@ const Index = () => {
     return <ResultsPage result={result} onRestart={resetDiagnostic} />;
   }
 
-  // Step 1: Company Profile
+  // Step 1: Contexte (Company Profile)
   if (currentStep === 1) {
     return (
       <div className="min-h-screen bg-background">
@@ -60,8 +58,8 @@ const Index = () => {
     );
   }
 
-  // Contact step (step 7)
-  if (currentStep === 7) {
+  // Step 5: Contact
+  if (currentStep === 5) {
     return (
       <div className="min-h-screen bg-background">
         <ProgressBar currentStep={currentStep} totalSteps={totalSteps} />
@@ -76,20 +74,9 @@ const Index = () => {
     );
   }
 
-  // Question steps (2-6)
+  // Question steps (2-4)
   const stepQuestions = getQuestionsForStep(currentStep, formData.organization.sector);
   const stepInfo = STEP_TITLES[currentStep];
-
-  // Skip sector-specific step if no sector selected or no questions
-  if (currentStep === 3 && stepQuestions.length === 0) {
-    // Auto-advance to next step
-    nextStep();
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Chargement...</p>
-      </div>
-    );
-  }
 
   if (stepQuestions.length > 0 && stepInfo) {
     return (
@@ -103,7 +90,7 @@ const Index = () => {
           onAnswer={updateAnswer}
           onNext={nextStep}
           onPrev={prevStep}
-          isLastStep={currentStep === 6}
+          isLastStep={currentStep === 4}
         />
       </div>
     );
