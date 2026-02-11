@@ -7,28 +7,21 @@ interface ProgressBarProps {
 }
 
 const STEP_LABELS = [
-  'Accueil',
   'Profil',
   'Fondations Data',
-  'Secteur',
   'BI & Analytics',
   'IA & Automation',
-  'Priorités',
   'Contact',
-  'Résultats',
 ];
 
 export const ProgressBar = ({ currentStep, totalSteps }: ProgressBarProps) => {
-  // Don't show on landing (0) and results (8)
-  if (currentStep === 0 || currentStep >= 8) return null;
-
-  const progress = ((currentStep) / (totalSteps - 2)) * 100;
+  const progress = (currentStep / totalSteps) * 100;
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 py-6">
       {/* Progress bar track */}
       <div className="relative h-2 bg-muted rounded-full overflow-hidden mb-4">
-        <div 
+        <div
           className="absolute left-0 top-0 h-full progress-gradient transition-all duration-500 ease-out rounded-full"
           style={{ width: `${progress}%` }}
         />
@@ -36,14 +29,14 @@ export const ProgressBar = ({ currentStep, totalSteps }: ProgressBarProps) => {
 
       {/* Step indicators */}
       <div className="flex justify-between">
-        {STEP_LABELS.slice(1, -1).map((label, index) => {
+        {STEP_LABELS.map((label, index) => {
           const stepNum = index + 1;
           const isCompleted = currentStep > stepNum;
           const isCurrent = currentStep === stepNum;
 
           return (
-            <div 
-              key={label} 
+            <div
+              key={label}
               className={cn(
                 "flex flex-col items-center gap-2 transition-all duration-300",
                 isCurrent && "scale-105"
@@ -63,7 +56,7 @@ export const ProgressBar = ({ currentStep, totalSteps }: ProgressBarProps) => {
                   stepNum
                 )}
               </div>
-              <span 
+              <span
                 className={cn(
                   "text-xs hidden md:block transition-colors",
                   isCurrent ? "text-foreground font-medium" : "text-muted-foreground"

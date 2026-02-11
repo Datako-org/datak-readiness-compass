@@ -1,440 +1,383 @@
 import { Question } from '@/types/diagnostic';
 
-// Step 2 - Data Foundations (Common to all sectors)
-export const dataFoundationsQuestions: Question[] = [
+// ============================================================
+// TRANSPORT & LOGISTIQUE - Diagnostic sectoriel complet
+// ============================================================
+
+// Bloc 1 - État des données (Q1-Q4)
+const transportDataQuestions: Question[] = [
   {
-    id: 'df_1',
+    id: 'tl_q1',
     step: 2,
-    axis: 'data_foundations',
+    dimension: 'data',
+    sector: 'transport',
+    question_text: 'Où sont stockées vos données de flotte (véhicules, maintenance, carburant, trajets) ?',
+    question_type: 'single_choice',
+    options: [
+      { label: 'Aucune centralisation claire', value: 'none', score: 0 },
+      { label: 'Papier, emails, carnets de bord', value: 'paper', score: 15 },
+      { label: 'Excel / Google Sheets (plusieurs fichiers)', value: 'spreadsheets', score: 40 },
+      { label: 'Logiciel de base + Excel en complément', value: 'software_excel', score: 60 },
+      { label: 'Système centralisé (TMS, ERP)', value: 'centralized', score: 90 },
+    ],
+    max_score: 100,
+    order_index: 1,
+  },
+  {
+    id: 'tl_q2',
+    step: 2,
+    dimension: 'data',
+    sector: 'transport',
+    question_text: 'Comment planifiez-vous et suivez-vous les maintenances de vos véhicules ?',
+    question_type: 'single_choice',
+    options: [
+      { label: 'Maintenance réactive (on répare quand ça casse)', value: 'reactive', score: 0 },
+      { label: 'Carnet papier ou mémoire', value: 'paper', score: 20 },
+      { label: 'Planning manuel dans Excel/agenda', value: 'manual_planning', score: 50 },
+      { label: 'Système automatisé avec alertes (basé sur km/temps)', value: 'automated', score: 100 },
+    ],
+    max_score: 100,
+    order_index: 2,
+  },
+  {
+    id: 'tl_q3',
+    step: 2,
+    dimension: 'data',
+    sector: 'transport',
+    question_text: 'Vos équipes peuvent-elles accéder facilement aux données dont elles ont besoin ?',
+    question_type: 'single_choice',
+    options: [
+      { label: 'Non, très difficile d\'obtenir l\'info', value: 'no', score: 0 },
+      { label: 'Partiellement, données dispersées', value: 'partial', score: 25 },
+      { label: 'Oui, mais nécessite de demander ou compiler', value: 'compile', score: 50 },
+      { label: 'Oui, données accessibles en temps réel (mobile/web)', value: 'realtime', score: 100 },
+    ],
+    max_score: 100,
+    order_index: 3,
+  },
+  {
+    id: 'tl_q4',
+    step: 2,
+    dimension: 'data',
+    sector: 'transport',
+    question_text: 'Pouvez-vous retrouver l\'historique complet d\'un véhicule (maintenance, coûts, incidents, trajets) ?',
+    question_type: 'single_choice',
+    options: [
+      { label: 'Non, très difficile ou impossible', value: 'no', score: 0 },
+      { label: 'Partiellement, il manque souvent des infos', value: 'partial', score: 20 },
+      { label: 'Oui, mais en cherchant dans plusieurs fichiers', value: 'multiple_files', score: 40 },
+      { label: 'Oui, immédiatement dans un système', value: 'instant', score: 100 },
+    ],
+    max_score: 100,
+    order_index: 4,
+  },
+];
+
+// Bloc 2 - Pilotage & Performance (Q5-Q8)
+const transportPilotageQuestions: Question[] = [
+  {
+    id: 'tl_q5',
+    step: 3,
+    dimension: 'pilotage',
+    sector: 'transport',
+    question_text: 'Suivez-vous vos coûts par véhicule et/ou par trajet ?',
+    question_type: 'single_choice',
+    options: [
+      { label: 'Non, pas de suivi détaillé des coûts', value: 'no', score: 0 },
+      { label: 'Estimation approximative', value: 'estimate', score: 30 },
+      { label: 'Oui, mais calcul manuel mensuel', value: 'manual_monthly', score: 60 },
+      { label: 'Oui, calcul automatique et suivi en temps réel', value: 'auto_realtime', score: 100 },
+    ],
+    max_score: 100,
+    order_index: 1,
+  },
+  {
+    id: 'tl_q6',
+    step: 3,
+    dimension: 'pilotage',
+    sector: 'transport',
+    question_text: 'Comment créez-vous vos reportings d\'activité (flotte, coûts, performance) ?',
+    question_type: 'single_choice',
+    options: [
+      { label: 'Pas de reporting structuré', value: 'none', score: 0 },
+      { label: 'Rapports basiques occasionnels', value: 'basic', score: 20 },
+      { label: 'Compilation manuelle Excel (prend plusieurs heures)', value: 'manual_excel', score: 40 },
+      { label: 'Dashboard automatisé mis à jour en temps réel', value: 'auto_dashboard', score: 100 },
+    ],
+    max_score: 100,
+    order_index: 2,
+  },
+  {
+    id: 'tl_q7',
+    step: 3,
+    dimension: 'pilotage',
+    sector: 'transport',
+    question_text: 'Suivez-vous des KPIs opérationnels (taux de disponibilité, coût au km, délais de livraison, etc.) ?',
+    question_type: 'single_choice',
+    options: [
+      { label: 'Non, pas de KPIs définis', value: 'no', score: 0 },
+      { label: 'Quelques indicateurs basiques', value: 'basic', score: 25 },
+      { label: 'Oui, mais calcul manuel et irrégulier', value: 'manual_irregular', score: 50 },
+      { label: 'Oui, KPIs suivis régulièrement et pilotés', value: 'regular_tracked', score: 100 },
+    ],
+    max_score: 100,
+    order_index: 3,
+  },
+  {
+    id: 'tl_q8',
+    step: 3,
+    dimension: 'pilotage',
+    sector: 'transport',
+    question_text: 'Comment prenez-vous vos décisions opérationnelles (achat véhicule, choix prestataire, optimisation routes) ?',
+    question_type: 'single_choice',
+    options: [
+      { label: 'Décisions rapides sans analyse approfondie', value: 'no_analysis', score: 10 },
+      { label: 'Principalement expérience et intuition', value: 'experience', score: 30 },
+      { label: 'Mix data + expérience terrain', value: 'mixed', score: 70 },
+      { label: 'Analyses data systématiques (data-driven)', value: 'data_driven', score: 100 },
+    ],
+    max_score: 100,
+    order_index: 4,
+  },
+];
+
+// Bloc 3 - Automatisation & IA (Q9-Q10)
+const transportAutomationQuestions: Question[] = [
+  {
+    id: 'tl_q9',
+    step: 4,
+    dimension: 'automation',
+    sector: 'transport',
+    question_text: 'Avez-vous des processus automatisés dans votre gestion de flotte ?',
+    question_type: 'single_choice',
+    options: [
+      { label: 'Non, tout est manuel', value: 'none', score: 0 },
+      { label: 'Intéressé mais pas encore mis en place', value: 'interested', score: 30 },
+      { label: 'Quelques automatisations basiques (ex : alertes email)', value: 'basic', score: 60 },
+      { label: 'Oui, plusieurs workflows automatisés', value: 'multiple', score: 100 },
+    ],
+    max_score: 100,
+    order_index: 1,
+  },
+  {
+    id: 'tl_q10',
+    step: 4,
+    dimension: 'automation',
+    sector: 'transport',
+    question_text: 'Seriez-vous intéressé par des solutions d\'IA pour :',
+    question_type: 'multi_choice',
+    scoring_mode: 'count',
+    options: [
+      { label: 'Prédiction de maintenance (anticiper les pannes)', value: 'predictive_maintenance', score: 1 },
+      { label: 'Optimisation des routes et trajets', value: 'route_optimization', score: 1 },
+      { label: 'Détection d\'anomalies (coûts inhabituels, consommation excessive)', value: 'anomaly_detection', score: 1 },
+      { label: 'Automatisation des reportings mensuels', value: 'auto_reporting', score: 1 },
+      { label: 'Analyse prédictive (coûts futurs, besoins en véhicules)', value: 'predictive_analytics', score: 1 },
+      { label: 'Pas encore pertinent pour nous', value: 'not_relevant', score: 0 },
+    ],
+    max_score: 100,
+    order_index: 2,
+  },
+];
+
+// ============================================================
+// QUESTIONS GÉNÉRIQUES (fallback pour les autres secteurs)
+// ============================================================
+
+const genericDataQuestions: Question[] = [
+  {
+    id: 'gen_q1',
+    step: 2,
+    dimension: 'data',
     question_text: 'Quelles sont vos principales sources de données aujourd\'hui ?',
     question_type: 'single_choice',
     options: [
       { label: 'Aucune source structurée', value: 'none', score: 0 },
-      { label: 'Fichiers Excel / Google Sheets', value: 'spreadsheets', score: 1 },
-      { label: 'ERP ou logiciel métier unique', value: 'single_erp', score: 2 },
-      { label: 'Plusieurs systèmes connectés', value: 'multiple_connected', score: 3 },
-      { label: 'Data warehouse ou lac de données', value: 'data_warehouse', score: 4 },
+      { label: 'Papier, emails', value: 'paper', score: 15 },
+      { label: 'Fichiers Excel / Google Sheets', value: 'spreadsheets', score: 40 },
+      { label: 'ERP ou logiciel métier', value: 'erp', score: 65 },
+      { label: 'Plusieurs systèmes connectés / Data warehouse', value: 'connected', score: 90 },
     ],
-    max_score: 4,
+    max_score: 100,
     order_index: 1,
   },
   {
-    id: 'df_2',
+    id: 'gen_q2',
     step: 2,
-    axis: 'data_foundations',
+    dimension: 'data',
     question_text: 'Vos données sont-elles centralisées dans un référentiel unique ?',
     question_type: 'single_choice',
     options: [
       { label: 'Non, les données sont dispersées', value: 'dispersed', score: 0 },
-      { label: 'Partiellement, certaines données sont centralisées', value: 'partial', score: 2 },
-      { label: 'Oui, nous avons un référentiel central', value: 'centralized', score: 4 },
+      { label: 'Partiellement centralisées', value: 'partial', score: 40 },
+      { label: 'Oui, référentiel central', value: 'centralized', score: 90 },
     ],
-    max_score: 4,
+    max_score: 100,
     order_index: 2,
   },
   {
-    id: 'df_3',
+    id: 'gen_q3',
     step: 2,
-    axis: 'data_foundations',
-    question_text: 'Quels outils utilisez-vous pour gérer vos données ?',
+    dimension: 'data',
+    question_text: 'Vos équipes peuvent-elles accéder facilement aux données dont elles ont besoin ?',
     question_type: 'single_choice',
     options: [
-      { label: 'Uniquement des tableurs', value: 'spreadsheets', score: 1 },
-      { label: 'Un ERP ou CRM standard', value: 'erp_crm', score: 2 },
-      { label: 'Des outils BI basiques', value: 'basic_bi', score: 3 },
-      { label: 'Une stack data moderne (cloud, ETL, etc.)', value: 'modern_stack', score: 4 },
+      { label: 'Non, très difficile d\'obtenir l\'info', value: 'no', score: 0 },
+      { label: 'Partiellement, données dispersées', value: 'partial', score: 25 },
+      { label: 'Oui, mais nécessite de demander ou compiler', value: 'compile', score: 50 },
+      { label: 'Oui, données accessibles en temps réel', value: 'realtime', score: 100 },
     ],
-    max_score: 4,
+    max_score: 100,
     order_index: 3,
   },
   {
-    id: 'df_4',
+    id: 'gen_q4',
     step: 2,
-    axis: 'data_foundations',
-    question_text: 'A quelle fréquence produisez-vous des rapports de données ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Rarement ou jamais', value: 'never', score: 0 },
-      { label: 'Mensuellement', value: 'monthly', score: 1 },
-      { label: 'Hebdomadairement', value: 'weekly', score: 2 },
-      { label: 'Quotidiennement', value: 'daily', score: 3 },
-      { label: 'En temps réel', value: 'realtime', score: 4 },
-    ],
-    max_score: 4,
-    order_index: 4,
-  },
-  {
-    id: 'df_5',
-    step: 2,
-    axis: 'data_foundations',
+    dimension: 'data',
     question_text: 'Comment évaluez-vous la qualité de vos données ?',
     question_type: 'single_choice',
     options: [
       { label: 'Mauvaise - beaucoup d\'erreurs', value: 'poor', score: 0 },
-      { label: 'Passable - quelques problèmes', value: 'fair', score: 1 },
-      { label: 'Correcte - généralement fiable', value: 'good', score: 2 },
-      { label: 'Bonne - validation en place', value: 'very_good', score: 3 },
-      { label: 'Excellente - gouvernance stricte', value: 'excellent', score: 4 },
+      { label: 'Passable - quelques problèmes', value: 'fair', score: 25 },
+      { label: 'Correcte - généralement fiable', value: 'good', score: 50 },
+      { label: 'Bonne - validation en place', value: 'very_good', score: 75 },
+      { label: 'Excellente - gouvernance stricte', value: 'excellent', score: 100 },
     ],
-    max_score: 4,
-    order_index: 5,
+    max_score: 100,
+    order_index: 4,
   },
 ];
 
-export const transportQuestions: Question[] = [
+const genericPilotageQuestions: Question[] = [
   {
-    id: 'tr_1',
+    id: 'gen_q5',
     step: 3,
-    axis: 'tooling',
-    sector: 'transport',
-    question_text: 'Disposez-vous d\'un système de suivi de flotte en temps réel ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Non', value: 'no', score: 0 },
-      { label: 'Partiellement (quelques véhicules)', value: 'partial', score: 2 },
-      { label: 'Oui, toute la flotte est suivie', value: 'yes', score: 4 },
-    ],
-    max_score: 4,
-    order_index: 1,
-  },
-  {
-    id: 'tr_2',
-    step: 3,
-    axis: 'tooling',
-    sector: 'transport',
-    question_text: 'Analysez-vous les coûts par véhicule ou par trajet ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Non, pas d\'analyse détaillée', value: 'no', score: 0 },
-      { label: 'Analyse globale uniquement', value: 'global', score: 1 },
-      { label: 'Analyse par véhicule', value: 'per_vehicle', score: 3 },
-      { label: 'Analyse détaillée par trajet', value: 'per_trip', score: 4 },
-    ],
-    max_score: 4,
-    order_index: 2,
-  },
-  {
-    id: 'tr_3',
-    step: 3,
-    axis: 'governance',
-    sector: 'transport',
-    question_text: 'Comment gérez-vous les données de maintenance ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Aucun suivi structuré', value: 'none', score: 0 },
-      { label: 'Carnet papier ou Excel', value: 'manual', score: 1 },
-      { label: 'Logiciel dédié non intégré', value: 'standalone', score: 2 },
-      { label: 'GMAO intégrée au SI', value: 'integrated', score: 4 },
-    ],
-    max_score: 4,
-    order_index: 3,
-  },
-];
-
-export const retailQuestions: Question[] = [
-  {
-    id: 'rt_1',
-    step: 3,
-    axis: 'tooling',
-    sector: 'retail',
-    question_text: 'Comment suivez-vous vos ventes en temps réel ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Pas de suivi temps réel', value: 'none', score: 0 },
-      { label: 'Exports manuels réguliers', value: 'manual', score: 1 },
-      { label: 'Dashboard quotidien', value: 'daily', score: 2 },
-      { label: 'Tableau de bord temps réel', value: 'realtime', score: 4 },
-    ],
-    max_score: 4,
-    order_index: 1,
-  },
-  {
-    id: 'rt_2',
-    step: 3,
-    axis: 'tooling',
-    sector: 'retail',
-    question_text: 'Quelle visibilité avez-vous sur vos stocks ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Inventaires manuels', value: 'manual', score: 0 },
-      { label: 'Suivi dans un ERP', value: 'erp', score: 2 },
-      { label: 'Stocks connectés omnicanal', value: 'omnichannel', score: 4 },
-    ],
-    max_score: 4,
-    order_index: 2,
-  },
-  {
-    id: 'rt_3',
-    step: 3,
-    axis: 'governance',
-    sector: 'retail',
-    question_text: 'Collectez-vous des données clients structurées ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Non', value: 'none', score: 0 },
-      { label: 'Email et historique achats', value: 'basic', score: 2 },
-      { label: 'CRM avec segmentation', value: 'crm', score: 3 },
-      { label: 'CDP vue client 360', value: 'cdp', score: 4 },
-    ],
-    max_score: 4,
-    order_index: 3,
-  },
-];
-
-export const energyQuestions: Question[] = [
-  {
-    id: 'en_1',
-    step: 3,
-    axis: 'tooling',
-    sector: 'energy',
-    question_text: 'Comment consolidez-vous vos KPIs opérationnels ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Manuellement via tableurs', value: 'manual', score: 0 },
-      { label: 'Automatisation partielle', value: 'partial', score: 2 },
-      { label: 'Consolidation automatique', value: 'automated', score: 4 },
-    ],
-    max_score: 4,
-    order_index: 1,
-  },
-  {
-    id: 'en_2',
-    step: 3,
-    axis: 'governance',
-    sector: 'energy',
-    question_text: 'Utilisez-vous des modèles de prévision ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Non', value: 'no', score: 0 },
-      { label: 'Prévisions basiques', value: 'basic', score: 2 },
-      { label: 'Modèles statistiques', value: 'statistical', score: 3 },
-      { label: 'Machine learning', value: 'ml', score: 4 },
-    ],
-    max_score: 4,
-    order_index: 2,
-  },
-  {
-    id: 'en_3',
-    step: 3,
-    axis: 'tooling',
-    sector: 'energy',
-    question_text: 'Intégrez-vous des données de sources multiples ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Non, sources isolées', value: 'isolated', score: 0 },
-      { label: 'Intégration partielle', value: 'partial', score: 2 },
-      { label: 'Plateforme data unifiée', value: 'unified', score: 4 },
-    ],
-    max_score: 4,
-    order_index: 3,
-  },
-];
-
-export const biAnalyticsQuestions: Question[] = [
-  {
-    id: 'bi_1',
-    step: 4,
-    axis: 'bi_analytics',
+    dimension: 'pilotage',
     question_text: 'Disposez-vous de tableaux de bord pour suivre vos KPIs ?',
     question_type: 'single_choice',
     options: [
       { label: 'Non', value: 'no', score: 0 },
-      { label: 'Oui, dans Excel/Sheets', value: 'spreadsheet', score: 1 },
-      { label: 'Oui, outil BI (Power BI, Tableau)', value: 'bi_tool', score: 3 },
-      { label: 'Dashboards temps réel', value: 'realtime', score: 4 },
+      { label: 'Oui, dans Excel/Sheets', value: 'spreadsheet', score: 30 },
+      { label: 'Oui, outil BI (Power BI, Tableau)', value: 'bi_tool', score: 70 },
+      { label: 'Dashboards temps réel', value: 'realtime', score: 100 },
     ],
-    max_score: 4,
+    max_score: 100,
     order_index: 1,
   },
   {
-    id: 'bi_2',
-    step: 4,
-    axis: 'bi_analytics',
-    question_text: 'Qui accède aux données analytiques ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Direction uniquement', value: 'executives', score: 1 },
-      { label: 'Quelques managers', value: 'managers', score: 2 },
-      { label: 'Responsables département', value: 'department_heads', score: 3 },
-      { label: 'Accès self-service', value: 'self_service', score: 4 },
-    ],
-    max_score: 4,
-    order_index: 2,
-  },
-  {
-    id: 'bi_3',
-    step: 4,
-    axis: 'bi_analytics',
-    question_text: 'Comment les décisions stratégiques sont-elles prises ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Intuition et expérience', value: 'intuition', score: 0 },
-      { label: 'Mix intuition et données', value: 'mixed', score: 2 },
-      { label: 'Principalement data-driven', value: 'data_informed', score: 3 },
-      { label: 'Culture data-driven', value: 'data_driven', score: 4 },
-    ],
-    max_score: 4,
-    order_index: 3,
-  },
-  {
-    id: 'bi_4',
-    step: 4,
-    axis: 'bi_analytics',
+    id: 'gen_q6',
+    step: 3,
+    dimension: 'pilotage',
     question_text: 'Vos rapports sont-ils automatisés ?',
     question_type: 'single_choice',
     options: [
       { label: 'Non, tout est manuel', value: 'manual', score: 0 },
-      { label: 'Partiellement automatisés', value: 'partial', score: 2 },
-      { label: 'Entièrement automatisés', value: 'automated', score: 4 },
+      { label: 'Rapports basiques occasionnels', value: 'basic', score: 20 },
+      { label: 'Partiellement automatisés', value: 'partial', score: 50 },
+      { label: 'Entièrement automatisés', value: 'automated', score: 100 },
     ],
-    max_score: 4,
+    max_score: 100,
+    order_index: 2,
+  },
+  {
+    id: 'gen_q7',
+    step: 3,
+    dimension: 'pilotage',
+    question_text: 'Suivez-vous des KPIs opérationnels régulièrement ?',
+    question_type: 'single_choice',
+    options: [
+      { label: 'Non, pas de KPIs définis', value: 'no', score: 0 },
+      { label: 'Quelques indicateurs basiques', value: 'basic', score: 25 },
+      { label: 'Oui, mais calcul manuel et irrégulier', value: 'manual', score: 50 },
+      { label: 'Oui, KPIs suivis régulièrement et pilotés', value: 'tracked', score: 100 },
+    ],
+    max_score: 100,
+    order_index: 3,
+  },
+  {
+    id: 'gen_q8',
+    step: 3,
+    dimension: 'pilotage',
+    question_text: 'Comment prenez-vous vos décisions stratégiques ?',
+    question_type: 'single_choice',
+    options: [
+      { label: 'Décisions rapides sans analyse approfondie', value: 'no_analysis', score: 10 },
+      { label: 'Principalement expérience et intuition', value: 'experience', score: 30 },
+      { label: 'Mix data + expérience', value: 'mixed', score: 70 },
+      { label: 'Culture data-driven', value: 'data_driven', score: 100 },
+    ],
+    max_score: 100,
     order_index: 4,
   },
 ];
 
-export const aiAutomationQuestions: Question[] = [
+const genericAutomationQuestions: Question[] = [
   {
-    id: 'ai_1',
-    step: 5,
-    axis: 'ai_automation',
+    id: 'gen_q9',
+    step: 4,
+    dimension: 'automation',
     question_text: 'Avez-vous des processus automatisés ?',
     question_type: 'single_choice',
     options: [
       { label: 'Non, tout est manuel', value: 'none', score: 0 },
-      { label: 'Automatisations simples', value: 'basic', score: 1 },
-      { label: 'RPA ou workflows', value: 'rpa', score: 3 },
-      { label: 'Automatisation avec IA', value: 'ai_powered', score: 4 },
+      { label: 'Intéressé mais pas encore mis en place', value: 'interested', score: 30 },
+      { label: 'Quelques automatisations basiques', value: 'basic', score: 60 },
+      { label: 'Plusieurs workflows automatisés', value: 'multiple', score: 100 },
     ],
-    max_score: 4,
+    max_score: 100,
     order_index: 1,
   },
   {
-    id: 'ai_2',
-    step: 5,
-    axis: 'ai_automation',
-    question_text: 'Quel est votre niveau de maturité IA ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Aucune expérience', value: 'none', score: 0 },
-      { label: 'Exploration / POC', value: 'exploration', score: 1 },
-      { label: 'Projets en production', value: 'production', score: 3 },
-      { label: 'IA intégrée aux processus', value: 'integrated', score: 4 },
-    ],
-    max_score: 4,
-    order_index: 2,
-  },
-  {
-    id: 'ai_3',
-    step: 5,
-    axis: 'ai_automation',
+    id: 'gen_q10',
+    step: 4,
+    dimension: 'automation',
     question_text: 'Quels cas d\'usage IA vous intéressent ?',
-    question_type: 'single_choice',
+    question_type: 'multi_choice',
+    scoring_mode: 'count',
     options: [
-      { label: 'Prédiction et forecasting', value: 'prediction', score: 2 },
-      { label: 'Automatisation de tâches', value: 'automation', score: 2 },
-      { label: 'Analyse de documents', value: 'document_ai', score: 2 },
-      { label: 'Tous ces cas', value: 'all', score: 4 },
+      { label: 'Prédiction et forecasting', value: 'prediction', score: 1 },
+      { label: 'Automatisation de tâches répétitives', value: 'task_automation', score: 1 },
+      { label: 'Analyse de documents', value: 'document_ai', score: 1 },
+      { label: 'Détection d\'anomalies', value: 'anomaly_detection', score: 1 },
+      { label: 'Reporting automatisé', value: 'auto_reporting', score: 1 },
+      { label: 'Pas encore pertinent pour nous', value: 'not_relevant', score: 0 },
     ],
-    max_score: 4,
-    order_index: 3,
-  },
-  {
-    id: 'ai_4',
-    step: 5,
-    axis: 'ai_automation',
-    question_text: 'Disposez-vous de compétences data/IA en interne ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Non', value: 'none', score: 0 },
-      { label: 'Compétences IT générales', value: 'it_general', score: 1 },
-      { label: 'Data analyst ou BI', value: 'data_analyst', score: 2 },
-      { label: 'Data scientist', value: 'data_scientist', score: 4 },
-    ],
-    max_score: 4,
-    order_index: 4,
+    max_score: 100,
+    order_index: 2,
   },
 ];
 
-export const constraintsQuestions: Question[] = [
-  {
-    id: 'cp_1',
-    step: 6,
-    axis: 'governance',
-    question_text: 'Quelles sont vos priorités business principales ?',
-    question_type: 'multi_choice',
-    options: [
-      { label: 'Réduire les coûts', value: 'reduce_costs', score: 1 },
-      { label: 'Expérience client', value: 'customer_experience', score: 1 },
-      { label: 'Accélérer les décisions', value: 'faster_decisions', score: 1 },
-      { label: 'Innovation', value: 'innovation', score: 1 },
-    ],
-    max_score: 4,
-    order_index: 1,
-  },
-  {
-    id: 'cp_2',
-    step: 6,
-    axis: 'governance',
-    question_text: 'Quel budget envisagez-vous pour un projet data/IA ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Moins de 10 000 EUR', value: 'under_10k', score: 1 },
-      { label: '10 000 - 50 000 EUR', value: '10k_50k', score: 2 },
-      { label: '50 000 - 100 000 EUR', value: '50k_100k', score: 3 },
-      { label: 'Plus de 100 000 EUR', value: 'over_100k', score: 4 },
-    ],
-    max_score: 4,
-    order_index: 2,
-  },
-  {
-    id: 'cp_3',
-    step: 6,
-    axis: 'governance',
-    question_text: 'Quel est votre horizon de temps souhaité ?',
-    question_type: 'single_choice',
-    options: [
-      { label: 'Immédiat (moins de 3 mois)', value: 'immediate', score: 4 },
-      { label: 'Court terme (3-6 mois)', value: 'short_term', score: 3 },
-      { label: 'Moyen terme (6-12 mois)', value: 'medium_term', score: 2 },
-      { label: 'Long terme (plus de 12 mois)', value: 'long_term', score: 1 },
-    ],
-    max_score: 4,
-    order_index: 3,
-  },
+// ============================================================
+// MAPPING PAR SECTEUR
+// ============================================================
+
+const questionsBySector: Record<string, Question[]> = {
+  transport: [
+    ...transportDataQuestions,
+    ...transportPilotageQuestions,
+    ...transportAutomationQuestions,
+  ],
+};
+
+const genericQuestions: Question[] = [
+  ...genericDataQuestions,
+  ...genericPilotageQuestions,
+  ...genericAutomationQuestions,
 ];
+
+// ============================================================
+// FONCTIONS D'ACCÈS
+// ============================================================
 
 export const getQuestionsForStep = (step: number, sector?: string): Question[] => {
-  switch (step) {
-    case 2:
-      return dataFoundationsQuestions;
-    case 3:
-      switch (sector) {
-        case 'transport':
-          return transportQuestions;
-        case 'retail':
-          return retailQuestions;
-        case 'energy':
-          return energyQuestions;
-        default:
-          return [];
-      }
-    case 4:
-      return biAnalyticsQuestions;
-    case 5:
-      return aiAutomationQuestions;
-    case 6:
-      return constraintsQuestions;
-    default:
-      return [];
-  }
+  const allQuestions = (sector && questionsBySector[sector]) || genericQuestions;
+  return allQuestions.filter(q => q.step === step);
 };
 
 export const getAllQuestions = (sector?: string): Question[] => {
-  return [
-    ...dataFoundationsQuestions,
-    ...(sector ? getQuestionsForStep(3, sector) : []),
-    ...biAnalyticsQuestions,
-    ...aiAutomationQuestions,
-    ...constraintsQuestions,
-  ];
+  return (sector && questionsBySector[sector]) || genericQuestions;
+};
+
+export const hasSectorQuestions = (sector: string): boolean => {
+  return sector in questionsBySector;
 };

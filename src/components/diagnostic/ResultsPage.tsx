@@ -1,8 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { DiagnosticResult } from '@/types/diagnostic';
+import { getRecommendations, getMaturityLabel, getMaturityColor } from '@/data/recommendations';
 import { motion } from 'framer-motion';
-import { RotateCcw, Calendar, FileText, ArrowRight } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { RotateCcw, Calendar, FileText, CheckCircle2, TrendingUp, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ResultsPageProps {
@@ -10,38 +10,16 @@ interface ResultsPageProps {
   onRestart: () => void;
 }
 
-const MATURITY_LEVELS = {
-  debutant: {
-    label: 'Débutant',
-    color: 'text-orange-400',
-    bgColor: 'bg-orange-400/10',
-    borderColor: 'border-orange-400/30',
-    description: 'Votre organisation est au début de son parcours data. Des fondations solides sont à construire pour exploiter pleinement le potentiel de vos données.',
-    recommendation: 'Atelier découverte',
-    recommendationDesc: 'Un atelier pour identifier vos quick wins et définir votre feuille de route data.',
-  },
-  intermediaire: {
-    label: 'Intermédiaire',
-    color: 'text-blue-400',
-    bgColor: 'bg-blue-400/10',
-    borderColor: 'border-blue-400/30',
-    description: 'Votre organisation dispose de bases solides. Il est temps d\'accélérer et d\'optimiser vos processus pour maximiser la valeur de vos données.',
-    recommendation: 'Audit approfondi',
-    recommendationDesc: 'Un audit complet pour identifier les leviers d\'amélioration et les opportunités IA.',
-  },
-  avance: {
-    label: 'Avancé',
-    color: 'text-green-400',
-    bgColor: 'bg-green-400/10',
-    borderColor: 'border-green-400/30',
-    description: 'Félicitations ! Votre maturité data est élevée. L\'étape suivante consiste à exploiter l\'IA avancée et l\'automatisation pour créer un avantage compétitif durable.',
-    recommendation: 'Roadmap stratégique',
-    recommendationDesc: 'Une feuille de route IA sur mesure pour transformer votre avance en avantage concurrentiel.',
-  },
+const DIMENSION_ICONS: Record<string, React.ReactNode> = {
+  data: <FileText className="h-5 w-5" />,
+  pilotage: <TrendingUp className="h-5 w-5" />,
+  automation: <Zap className="h-5 w-5" />,
 };
 
 export const ResultsPage = ({ result, onRestart }: ResultsPageProps) => {
-  const maturity = MATURITY_LEVELS[result.maturityLevel];
+  const maturityLabel = getMaturityLabel(result.maturityLevel);
+  const maturityColor = getMaturityColor(result.maturityLevel);
+  const recommendation = getRecommendations(result.sector, result.maturityLevel);
 
   const handleContactEmail = () => {
     const subject = encodeURIComponent('Demande de rendez-vous - Diagnostic Data & IA');
@@ -49,7 +27,10 @@ export const ResultsPage = ({ result, onRestart }: ResultsPageProps) => {
       `Bonjour,\n\nSuite à mon diagnostic Data & IA, je souhaite prendre rendez-vous avec un expert Datakö.\n\n` +
       `Résultats du diagnostic :\n` +
       `- Score global : ${result.percentage}%\n` +
-      `- Niveau de maturité : ${maturity.label}\n\n` +
+      `- Niveau de maturité : ${maturityLabel}\n` +
+      `- Données : ${result.dimensionScores.find(d => d.dimension === 'data')?.percentage || 0}%\n` +
+      `- Pilotage : ${result.dimensionScores.find(d => d.dimension === 'pilotage')?.percentage || 0}%\n` +
+      `- Automatisation : ${result.dimensionScores.find(d => d.dimension === 'automation')?.percentage || 0}%\n\n` +
       `Cordialement`
     );
     window.open(`mailto:contact@datako.com?subject=${subject}&body=${body}`, '_blank');
@@ -60,13 +41,9 @@ export const ResultsPage = ({ result, onRestart }: ResultsPageProps) => {
       `Bonjour,\n\nSuite à mon diagnostic Data & IA sur Datakö, je souhaite prendre rendez-vous.\n\n` +
       `Résultats :\n` +
       `- Score : ${result.percentage}%\n` +
-      `- Niveau : ${maturity.label}`
+      `- Niveau : ${maturityLabel}`
     );
-    window.open(`https://wa.me/00224000000?text=${message}`, '_blank');
-  };
-
-  const handleLearnMore = () => {
-    window.open('https://datakö.com', '_blank');
+    window.open(`https://wa.me/00224612434545?text=${message}`, '_blank');
   };
 
   return (
@@ -117,54 +94,56 @@ export const ResultsPage = ({ result, onRestart }: ResultsPageProps) => {
             {/* Maturity Level Badge */}
             <div className={cn(
               "inline-flex items-center gap-2 px-6 py-3 rounded-full border",
-              maturity.bgColor,
-              maturity.borderColor
+              maturityColor.bg,
+              maturityColor.border
             )}>
-              <span className={cn("text-lg font-semibold", maturity.color)}>
-                Niveau : {maturity.label}
+              <span className={cn("text-lg font-semibold", maturityColor.text)}>
+                Niveau : {maturityLabel}
               </span>
             </div>
           </motion.div>
 
-          {/* Description */}
+          {/* Dimension Scores */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.15 }}
             className="bg-card rounded-xl p-8 border border-border mb-8"
           >
-            <p className="text-lg text-center leading-relaxed">
-              {maturity.description}
-            </p>
-          </motion.div>
-
-          {/* Axis Scores */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-card rounded-xl p-8 border border-border mb-8"
-          >
-            <h2 className="text-xl font-semibold mb-6">Détail par axe</h2>
+            <h2 className="text-xl font-semibold mb-6">Détail par dimension</h2>
             <div className="space-y-6">
-              {result.axisScores.map((axis, index) => (
+              {result.dimensionScores.map((dim, index) => (
                 <motion.div
-                  key={axis.axis}
+                  key={dim.dimension}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
+                  transition={{ delay: 0.25 + index * 0.1 }}
                 >
                   <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium">{axis.axis}</span>
-                    <span className="text-muted-foreground">
-                      {axis.score}/{axis.maxScore} ({axis.percentage}%)
+                    <div className="flex items-center gap-2">
+                      <span className="text-primary">
+                        {DIMENSION_ICONS[dim.dimension]}
+                      </span>
+                      <span className="font-medium">{dim.label}</span>
+                      <span className="text-xs text-muted-foreground">
+                        (poids : {Math.round(dim.weight * 100)}%)
+                      </span>
+                    </div>
+                    <span className={cn(
+                      "font-semibold text-lg",
+                      dim.percentage <= 30 ? 'text-orange-400' :
+                        dim.percentage <= 60 ? 'text-blue-400' :
+                          dim.percentage <= 85 ? 'text-green-400' :
+                            'text-purple-400'
+                    )}>
+                      {dim.percentage}%
                     </span>
                   </div>
                   <div className="relative h-3 bg-muted rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${axis.percentage}%` }}
-                      transition={{ duration: 0.8, delay: 0.5 + index * 0.1 }}
+                      animate={{ width: `${dim.percentage}%` }}
+                      transition={{ duration: 0.8, delay: 0.4 + index * 0.1 }}
                       className="absolute left-0 top-0 h-full progress-gradient rounded-full"
                     />
                   </div>
@@ -173,58 +152,101 @@ export const ResultsPage = ({ result, onRestart }: ResultsPageProps) => {
             </div>
           </motion.div>
 
-          {/* Recommendation */}
+          {/* Recommendations */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-card rounded-xl p-8 border border-primary/30 glow-datako"
+            transition={{ delay: 0.3 }}
+            className="bg-card rounded-xl p-8 border border-primary/30 glow-datako mb-8"
           >
-            <h2 className="text-xl font-semibold mb-4 gradient-datako-text">
-              Prochaine étape recommandée
+            <h2 className="text-xl font-semibold mb-2 gradient-datako-text">
+              {recommendation.title}
             </h2>
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div className="flex-1">
-                <h3 className="text-lg font-medium mb-2">{maturity.recommendation}</h3>
-                <p className="text-muted-foreground">{maturity.recommendationDesc}</p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button
-                  className="gradient-datako text-primary-foreground hover:opacity-90"
-                  onClick={handleContactEmail}
+
+            {/* Action Items */}
+            <div className="mt-6 space-y-3">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                Actions recommandées
+              </h3>
+              {recommendation.actions.map((action, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 + i * 0.08 }}
+                  className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50"
                 >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Prendre rendez-vous (Email)
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-green-500 text-green-500 hover:bg-green-500/10"
-                  onClick={handleContactWhatsApp}
-                >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  WhatsApp
-                </Button>
-              </div>
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <span>{action}</span>
+                </motion.div>
+              ))}
             </div>
+
+            {/* Impact */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+              className="mt-6 p-4 rounded-lg bg-primary/5 border border-primary/20"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                <span className="font-semibold text-sm">Impact estimé</span>
+              </div>
+              <p className="text-muted-foreground">{recommendation.impact}</p>
+              {recommendation.roi && (
+                <p className="text-primary font-medium mt-1">{recommendation.roi}</p>
+              )}
+            </motion.div>
           </motion.div>
 
-          {/* Additional CTAs */}
+          {/* CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="mt-8 text-center"
+            className="bg-card rounded-xl p-8 border border-border"
           >
-            <p className="text-muted-foreground mb-4">
-              Un expert Datakö vous contactera sous 48h avec une analyse détaillée.
+            <h2 className="text-xl font-semibold mb-4 text-center">
+              Passez à l'action
+            </h2>
+            <p className="text-muted-foreground text-center mb-6">
+              Un expert Datakö vous contactera sous 48h avec une analyse détaillée et un plan d'action personnalisé.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="outline" className="border-border"
-                onClick={() => window.open("https://datakö.com", "_blank")}>
-                <FileText className="mr-2 h-4 w-4" />
-                En savoir plus sur Datakö
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button
+                className="gradient-datako text-primary-foreground hover:opacity-90"
+                onClick={handleContactEmail}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                Prendre rendez-vous (Email)
+              </Button>
+              <Button
+                variant="outline"
+                className="border-green-500 text-green-500 hover:bg-green-500/10"
+                onClick={handleContactWhatsApp}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                WhatsApp
               </Button>
             </div>
+          </motion.div>
+
+          {/* Footer link */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-6 text-center"
+          >
+            <Button
+              variant="ghost"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => window.open("https://datakö.com", "_blank")}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              En savoir plus sur Datakö
+            </Button>
           </motion.div>
         </div>
       </main>
@@ -232,7 +254,7 @@ export const ResultsPage = ({ result, onRestart }: ResultsPageProps) => {
       {/* Footer */}
       <footer className="py-6 px-8 border-t border-border">
         <div className="max-w-7xl mx-auto text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Datakö. Tous droits réservés.
+          &copy; {new Date().getFullYear()} Datakö. Tous droits réservés.
         </div>
       </footer>
     </div>

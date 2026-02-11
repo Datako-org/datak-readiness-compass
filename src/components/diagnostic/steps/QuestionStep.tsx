@@ -43,17 +43,49 @@ export const QuestionStep = ({
 
   const handleMultiChoice = (question: Question, value: string, checked: boolean) => {
     const currentAnswer = answers[question.id];
-    let selectedValues: string[] = currentAnswer 
-      ? currentAnswer.value.split(',').filter(Boolean) 
+    let selectedValues: string[] = currentAnswer
+      ? currentAnswer.value.split(',').filter(Boolean)
       : [];
 
+    // Count-based scoring mode (for Q10-style questions)
+    if (question.scoring_mode === 'count') {
+      const isExclusiveOption = value === 'not_relevant';
+
+      if (isExclusiveOption && checked) {
+        // Selecting "not relevant" deselects all others
+        selectedValues = ['not_relevant'];
+      } else if (!isExclusiveOption && checked) {
+        // Selecting a regular option removes "not relevant"
+        selectedValues = selectedValues.filter(v => v !== 'not_relevant');
+        selectedValues.push(value);
+      } else {
+        // Unchecking
+        selectedValues = selectedValues.filter(v => v !== value);
+      }
+
+      // Count non-exclusive selections
+      const count = selectedValues.filter(v => v !== 'not_relevant').length;
+      let score: number;
+      if (count >= 4) score = 100;
+      else if (count >= 2) score = 70;
+      else if (count === 1) score = 40;
+      else score = 10;
+
+      onAnswer(question.id, {
+        questionId: question.id,
+        value: selectedValues.join(','),
+        score,
+      });
+      return;
+    }
+
+    // Default sum-based scoring
     if (checked) {
       selectedValues.push(value);
     } else {
       selectedValues = selectedValues.filter((v) => v !== value);
     }
 
-    // Calculate total score for selected options (capped at max_score)
     let totalScore = 0;
     selectedValues.forEach((v) => {
       const option = question.options.find((o) => o.value === v);
@@ -112,7 +144,7 @@ export const QuestionStep = ({
                       onClick={() => handleSingleChoice(question, option.value)}
                     >
                       <RadioGroupItem value={option.value} id={`${question.id}-${option.value}`} />
-                      <Label 
+                      <Label
                         htmlFor={`${question.id}-${option.value}`}
                         className="flex-1 cursor-pointer"
                       >
@@ -141,11 +173,11 @@ export const QuestionStep = ({
                         <Checkbox
                           id={`${question.id}-${option.value}`}
                           checked={isChecked}
-                          onCheckedChange={(checked) => 
+                          onCheckedChange={(checked) =>
                             handleMultiChoice(question, option.value, checked as boolean)
                           }
                         />
-                        <Label 
+                        <Label
                           htmlFor={`${question.id}-${option.value}`}
                           className="flex-1 cursor-pointer"
                         >

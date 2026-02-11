@@ -1,11 +1,12 @@
 import { useState, useCallback } from 'react';
-import { 
-  DiagnosticFormData, 
-  DiagnosticAnswer, 
-  DiagnosticResult, 
-  AxisScore,
+import {
+  DiagnosticFormData,
+  DiagnosticAnswer,
+  DiagnosticResult,
+  DimensionScore,
   Organization,
-  Respondent 
+  Respondent,
+  DIMENSIONS,
 } from '@/types/diagnostic';
 import { getAllQuestions } from '@/data/questions';
 import { supabase } from '@/integrations/supabase/client';
@@ -69,77 +70,81 @@ export const useDiagnostic = () => {
   }, []);
 
   const calculateResults = useCallback((): DiagnosticResult => {
-    const questions = getAllQuestions(formData.organization.sector);
+    const sector = formData.organization.sector;
+    const questions = getAllQuestions(sector);
     const answers = formData.answers;
 
-    // Calculate scores per axis
-    const axisMap = new Map<string, { total: number; max: number }>();
-    
+    // Group questions by dimension
+    const dimensionMap = new Map<string, { total: number; count: number }>();
+
     questions.forEach(q => {
-      if (!axisMap.has(q.axis)) {
-        axisMap.set(q.axis, { total: 0, max: 0 });
+      if (!dimensionMap.has(q.dimension)) {
+        dimensionMap.set(q.dimension, { total: 0, count: 0 });
       }
-      const axisData = axisMap.get(q.axis)!;
-      axisData.max += q.max_score;
-      
+      const dimData = dimensionMap.get(q.dimension)!;
+      dimData.count += 1;
+
       const answer = answers[q.id];
       if (answer) {
-        axisData.total += answer.score;
+        dimData.total += answer.score;
       }
     });
 
-    const axisScores: AxisScore[] = [];
-    let totalScore = 0;
-    let maxPossibleScore = 0;
+    // Calculate dimension scores (average per dimension, 0-100)
+    const dimensionScores: DimensionScore[] = [];
 
-    const axisLabels: Record<string, string> = {
-      data_foundations: 'Fondations Data',
-      tooling: 'Outillage',
-      governance: 'Gouvernance & Processus',
-      bi_analytics: 'BI & Analytics',
-      ai_automation: 'IA & Automatisation',
-    };
+    DIMENSIONS.forEach(dim => {
+      const data = dimensionMap.get(dim.id);
+      const percentage = data && data.count > 0
+        ? Math.round(data.total / data.count)
+        : 0;
 
-    axisMap.forEach((data, axis) => {
-      const percentage = data.max > 0 ? Math.round((data.total / data.max) * 100) : 0;
-      axisScores.push({
-        axis: axisLabels[axis] || axis,
-        score: data.total,
-        maxScore: data.max,
+      dimensionScores.push({
+        dimension: dim.id,
+        label: dim.label,
+        score: data?.total || 0,
+        maxScore: (data?.count || 0) * 100,
         percentage,
+        weight: dim.weight,
       });
-      totalScore += data.total;
-      maxPossibleScore += data.max;
     });
 
-    const percentage = maxPossibleScore > 0 
-      ? Math.round((totalScore / maxPossibleScore) * 100) 
-      : 0;
+    // Calculate weighted total score
+    const percentage = Math.round(
+      dimensionScores.reduce((acc, dim) => acc + dim.percentage * dim.weight, 0)
+    );
 
-    let maturityLevel: 'debutant' | 'intermediaire' | 'avance';
-    if (percentage < 40) {
+    // Determine maturity level (4 levels)
+    let maturityLevel: 'debutant' | 'intermediaire' | 'avance' | 'expert';
+    if (percentage <= 30) {
       maturityLevel = 'debutant';
-    } else if (percentage < 70) {
+    } else if (percentage <= 60) {
       maturityLevel = 'intermediaire';
-    } else {
+    } else if (percentage <= 85) {
       maturityLevel = 'avance';
+    } else {
+      maturityLevel = 'expert';
     }
+
+    const totalScore = dimensionScores.reduce((acc, d) => acc + d.score, 0);
+    const maxPossibleScore = dimensionScores.reduce((acc, d) => acc + d.maxScore, 0);
 
     return {
       totalScore,
       maxPossibleScore,
       percentage,
       maturityLevel,
-      axisScores,
+      dimensionScores,
+      sector,
     };
   }, [formData]);
 
   const submitDiagnostic = useCallback(async () => {
     setIsSubmitting(true);
-    console.log('📊 Diagnostic submission started', {
+    console.log('Diagnostic submission started', {
       organization: formData.organization,
       respondent: formData.respondent,
-      answersCount: Object.keys(formData.answers).length
+      answersCount: Object.keys(formData.answers).length,
     });
 
     try {
@@ -158,7 +163,6 @@ export const useDiagnostic = () => {
         .single();
 
       if (orgError) throw orgError;
-      console.log('✅ Organization created:', orgData);
 
       // Create respondent
       const { data: respondentData, error: respondentError } = await supabase
@@ -175,7 +179,6 @@ export const useDiagnostic = () => {
         .single();
 
       if (respondentError) throw respondentError;
-      console.log('✅ Respondent created:', respondentData);
 
       // Create diagnostic
       const { data: diagnosticData, error: diagnosticError } = await supabase
@@ -183,9 +186,9 @@ export const useDiagnostic = () => {
         .insert([{
           organization_id: orgData.id,
           respondent_id: respondentData.id,
-          total_score: calculatedResult.totalScore,
+          total_score: calculatedResult.percentage,
           maturity_level: calculatedResult.maturityLevel,
-          axis_scores: JSON.parse(JSON.stringify(calculatedResult.axisScores)),
+          axis_scores: JSON.parse(JSON.stringify(calculatedResult.dimensionScores)),
           status: 'completed',
           completed_at: new Date().toISOString(),
         }])
@@ -193,7 +196,6 @@ export const useDiagnostic = () => {
         .single();
 
       if (diagnosticError) throw diagnosticError;
-      console.log('✅ Diagnostic created:', diagnosticData);
 
       // Store answers
       const answersToInsert = Object.entries(formData.answers).map(([questionId, answer]) => ({
@@ -222,14 +224,13 @@ export const useDiagnostic = () => {
           },
         });
       } catch {
-        // Email sending is optional, don't fail the submission
         console.log('Email sending skipped');
       }
 
       setResult({ ...calculatedResult, id: diagnosticData.id });
       nextStep();
     } catch (error) {
-      console.error('❌ Submission failed:', error);
+      console.error('Submission failed:', error);
       alert('Erreur lors de l\'envoi. Vérifiez la console.');
       throw error;
     } finally {
