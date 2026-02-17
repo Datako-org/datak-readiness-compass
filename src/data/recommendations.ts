@@ -47,6 +47,94 @@ const transportRecommendations: Record<MaturityLevel, SectorRecommendation> = {
 };
 
 // ============================================================
+// COMMERCE & DISTRIBUTION
+// ============================================================
+
+const retailRecommendations: Record<MaturityLevel, SectorRecommendation> = {
+  debutant: {
+    title: 'Votre priorité absolue : Centraliser vos données commerciales',
+    actions: [
+      'Centraliser ventes, stocks, et clients dans une base unique',
+      'Créer un dashboard simple de suivi commercial',
+      'Automatiser l\'import des données de caisse/ventes',
+    ],
+    impact: 'Gain de temps : 10-15h/semaine | Visibilité immédiate sur vos performances réelles | Détection rapide des ruptures de stock',
+  },
+  intermediaire: {
+    title: 'Vous avez les bases. Passez à l\'optimisation commerciale data-driven',
+    actions: [
+      'Analyser vos marges par produit et par point de vente',
+      'Automatiser vos reportings commerciaux',
+      'Détecter les opportunités (produits stars, zones performantes)',
+    ],
+    impact: 'ROI : 10-15% d\'amélioration de la marge | Pilotage commercial basé sur la data | Réactivité immédiate sur les tendances',
+  },
+  avance: {
+    title: 'Excellent niveau. Passez à l\'IA prédictive et personnalisation',
+    actions: [
+      'Prévision de la demande pour optimiser les stocks',
+      'Pricing dynamique basé sur la demande',
+      'Personnalisation de l\'expérience client',
+      'Automatisation complète des workflows commerciaux',
+    ],
+    impact: 'Réduction de 20-30% des ruptures de stock | 5-10% d\'amélioration du CA | Personnalisation à l\'échelle',
+  },
+  expert: {
+    title: 'Vous êtes au top. Explorez l\'innovation continue',
+    actions: [
+      'Benchmarking sectoriel retail',
+      'IA avancée (computer vision, prédiction comportement)',
+      'Écosystème data étendu (fournisseurs, marketplace)',
+    ],
+    impact: 'Innovation continue et avantage concurrentiel | Expérience client différenciante | Optimisation maximale',
+  },
+};
+
+// ============================================================
+// ÉNERGIE & UTILITIES
+// ============================================================
+
+const energyRecommendations: Record<MaturityLevel, SectorRecommendation> = {
+  debutant: {
+    title: 'Votre priorité absolue : Centraliser vos données opérationnelles',
+    actions: [
+      'Centraliser production, maintenance, et incidents dans une base unique',
+      'Créer un dashboard simple de suivi opérationnel',
+      'Automatiser la remontée d\'informations terrain',
+    ],
+    impact: 'Gain de temps : 8-12h/semaine | Visibilité immédiate sur les incidents et la performance | Détection rapide des anomalies',
+  },
+  intermediaire: {
+    title: 'Vous avez les bases. Passez à l\'optimisation opérationnelle data-driven',
+    actions: [
+      'Analyser vos coûts et pertes par site/équipement',
+      'Automatiser vos reportings réglementaires et opérationnels',
+      'Détecter les équipements à risque et optimisations possibles',
+    ],
+    impact: 'ROI : 10-15% de réduction des coûts opérationnels | Pilotage basé sur la data | Réduction des temps d\'intervention',
+  },
+  avance: {
+    title: 'Excellent niveau. Passez à l\'IA prédictive et optimisation réseau',
+    actions: [
+      'Maintenance prédictive pour anticiper les pannes',
+      'Optimisation de la production/distribution en temps réel',
+      'Détection d\'anomalies et fraudes automatique',
+      'Prévision de la demande pour ajuster la production',
+    ],
+    impact: 'Réduction de 25-35% des pannes non prévues | 5-10% d\'optimisation de la performance | Amélioration de la qualité de service',
+  },
+  expert: {
+    title: 'Vous êtes au top. Explorez l\'innovation continue',
+    actions: [
+      'Smart grid et IoT avancé',
+      'Jumeaux numériques des infrastructures',
+      'IA avancée pour optimisation globale du réseau',
+    ],
+    impact: 'Innovation continue et différenciation | Excellence opérationnelle | Leadership technologique',
+  },
+};
+
+// ============================================================
 // RECOMMANDATIONS GÉNÉRIQUES (fallback)
 // ============================================================
 
@@ -95,6 +183,8 @@ const genericRecommendations: Record<MaturityLevel, SectorRecommendation> = {
 
 const recommendationsBySector: Record<string, Record<MaturityLevel, SectorRecommendation>> = {
   transport: transportRecommendations,
+  retail: retailRecommendations,
+  energy: energyRecommendations,
 };
 
 export const getRecommendations = (

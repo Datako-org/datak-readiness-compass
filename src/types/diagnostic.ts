@@ -76,11 +76,7 @@ export interface SectorRecommendation {
 export const SECTORS = [
   { value: 'transport', label: 'Transport & Logistique' },
   { value: 'retail', label: 'Commerce & Distribution' },
-  { value: 'btp', label: 'BTP / Construction' },
-  { value: 'energy', label: 'Énergie & Utilities' },
-  { value: 'sante', label: 'Santé / Pharmacie' },
-  { value: 'finance', label: 'Finance / Assurance' },
-  { value: 'services', label: 'Services' },
+  { value: 'energy', label: 'Énergie & Mines' },
   { value: 'autre', label: 'Autre' },
 ] as const;
 
