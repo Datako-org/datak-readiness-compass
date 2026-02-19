@@ -1,3 +1,33 @@
+export interface AdminDiagnosticRow {
+  id: string;
+  completed_at: string;
+  total_score: number;
+  maturity_level: string;
+  axis_scores: unknown;
+  org_name: string;
+  sector: string;
+  country: string;
+  size: string;
+  respondent_name: string;
+  email: string;
+  role: string;
+  phone: string | null;
+}
+
+export interface AdminDiagnosticAnswer {
+  id: string;
+  question_id: string | null;
+  answer_value: string;
+  score: number;
+}
+
+export interface AdminStats {
+  total: number;
+  avgScore: number;
+  sectorCounts: Record<string, number>;
+  advancedPercent: number;
+}
+
 export interface Organization {
   id?: string;
   name: string;
