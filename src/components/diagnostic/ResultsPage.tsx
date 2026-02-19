@@ -43,7 +43,7 @@ export const ResultsPage = ({ result, onRestart }: ResultsPageProps) => {
       `- Score : ${result.percentage}%\n` +
       `- Niveau : ${maturityLabel}`
     );
-    window.open(`https://wa.me/00224612434545?text=${message}`, '_blank');
+    window.open(`https://wa.me/+224612434545?text=${message}`, '_blank');
   };
 
   return (
