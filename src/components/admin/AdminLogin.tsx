@@ -30,8 +30,15 @@ const AdminLogin = ({ onSuccess }: AdminLoginProps) => {
         return;
       }
 
+      const contentType = response.headers.get('content-type') ?? '';
+      if (!contentType.includes('application/json')) {
+        setError('La fonction Netlify est inaccessible. Vérifiez que netlify dev est lancé.');
+        return;
+      }
+
       if (!response.ok) {
-        setError('Erreur serveur, veuillez réessayer');
+        const body = await response.json().catch(() => ({}));
+        setError(body.error || 'Erreur serveur, veuillez réessayer');
         return;
       }
 

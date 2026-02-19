@@ -42,13 +42,16 @@ const AdminDashboard = ({ password, onLogout }: AdminDashboardProps) => {
           return;
         }
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || body.detail || `HTTP ${res.status}`);
+        }
 
         const json = await res.json();
         setAllData(json.data ?? []);
         setStats(json.stats ?? null);
-      } catch {
-        setError('Impossible de charger les données. Vérifiez la configuration Netlify.');
+      } catch (e) {
+        setError(`Erreur : ${e instanceof Error ? e.message : 'inconnue'}`);
       } finally {
         setIsLoading(false);
       }
