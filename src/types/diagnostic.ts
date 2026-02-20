@@ -1,3 +1,20 @@
+export type CrmStatus =
+  | 'new'
+  | 'contacted'
+  | 'meeting_scheduled'
+  | 'proposal_sent'
+  | 'won'
+  | 'lost';
+
+export const CRM_STATUS_CONFIG: Record<CrmStatus, { label: string; className: string }> = {
+  new:               { label: 'Nouveau',       className: 'bg-blue-500/10 text-blue-400 border-blue-500/30' },
+  contacted:         { label: 'Contacté',      className: 'bg-purple-500/10 text-purple-400 border-purple-500/30' },
+  meeting_scheduled: { label: 'RDV programmé',      className: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30' },
+  proposal_sent:     { label: 'Proposition envoyée', className: 'bg-orange-500/10 text-orange-400 border-orange-500/30' },
+  won:               { label: 'Gagné',         className: 'bg-green-500/10 text-green-400 border-green-500/30' },
+  lost:              { label: 'Perdu',         className: 'bg-gray-500/10 text-gray-400 border-gray-500/30' },
+};
+
 export interface AdminDiagnosticRow {
   id: string;
   completed_at: string;
@@ -12,6 +29,9 @@ export interface AdminDiagnosticRow {
   email: string;
   role: string;
   phone: string | null;
+  crm_status: CrmStatus;
+  internal_notes: string | null;
+  deleted_at?: string | null;
 }
 
 export interface AdminDiagnosticAnswer {
@@ -26,6 +46,16 @@ export interface AdminStats {
   avgScore: number;
   sectorCounts: Record<string, number>;
   advancedPercent: number;
+}
+
+export interface CrmStats {
+  new: number;
+  contacted: number;
+  meeting_scheduled: number;
+  proposal_sent: number;
+  won: number;
+  lost: number;
+  conversionRate: number;
 }
 
 export interface Organization {
