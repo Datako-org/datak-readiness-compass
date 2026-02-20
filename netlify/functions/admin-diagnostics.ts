@@ -17,7 +17,7 @@ const corsHeaders = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, x-admin-password',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, PATCH, DELETE, OPTIONS',
 };
 
 export const handler = async (event: NetlifyEvent): Promise<NetlifyResponse> => {
@@ -35,7 +35,7 @@ export const handler = async (event: NetlifyEvent): Promise<NetlifyResponse> => 
     };
   }
 
-  // Env vars (support VITE_ prefix fallback for local dev)
+  // Env vars
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const supabaseServiceKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -44,14 +44,68 @@ export const handler = async (event: NetlifyEvent): Promise<NetlifyResponse> => 
     return {
       statusCode: 500,
       headers: corsHeaders,
-      body: JSON.stringify({
-        error: 'Missing env vars',
-        detail: `SUPABASE_URL=${!!supabaseUrl} KEY=${!!supabaseServiceKey}`,
-      }),
+      body: JSON.stringify({ error: 'Missing env vars' }),
     };
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  // ── PATCH — update crm_status / internal_notes ───────────────────────────
+  if (event.httpMethod === 'PATCH') {
+    let body: Record<string, unknown> = {};
+    try {
+      body = JSON.parse(event.body || '{}');
+    } catch {
+      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Invalid JSON' }) };
+    }
+
+    if (!body.id) {
+      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Missing id' }) };
+    }
+
+    const updates: Record<string, unknown> = {};
+    if (body.crm_status !== undefined) updates.crm_status = body.crm_status;
+    if (body.internal_notes !== undefined) updates.internal_notes = body.internal_notes;
+    if (body.deleted_at !== undefined) updates.deleted_at = body.deleted_at;
+
+    const { error } = await supabase
+      .from('diagnostics')
+      .update(updates)
+      .eq('id', body.id as string);
+
+    if (error) {
+      return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: error.message }) };
+    }
+
+    return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ success: true }) };
+  }
+
+  // ── DELETE — soft delete bulk ─────────────────────────────────────────────
+  if (event.httpMethod === 'DELETE') {
+    let body: Record<string, unknown> = {};
+    try {
+      body = JSON.parse(event.body || '{}');
+    } catch {
+      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Invalid JSON' }) };
+    }
+
+    const ids = body.ids as string[];
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Missing or empty ids' }) };
+    }
+
+    const { error } = await supabase
+      .from('diagnostics')
+      .update({ deleted_at: new Date().toISOString() })
+      .in('id', ids);
+
+    if (error) {
+      return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: error.message }) };
+    }
+
+    return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ success: true, count: ids.length }) };
+  }
+
   const params = event.queryStringParameters || {};
 
   // ── Detail view ──────────────────────────────────────────────────────────
@@ -59,7 +113,7 @@ export const handler = async (event: NetlifyEvent): Promise<NetlifyResponse> => 
     const [{ data: diag, error: diagErr }, { data: answers, error: answErr }] = await Promise.all([
       supabase
         .from('diagnostics')
-        .select('id, total_score, maturity_level, status, completed_at, axis_scores, organization_id, respondent_id')
+        .select('id, total_score, maturity_level, status, completed_at, axis_scores, organization_id, respondent_id, crm_status, internal_notes')
         .eq('id', params.id)
         .single(),
       supabase
@@ -92,9 +146,10 @@ export const handler = async (event: NetlifyEvent): Promise<NetlifyResponse> => 
           id: d.id,
           total_score: d.total_score,
           maturity_level: d.maturity_level,
-          status: d.status,
           completed_at: d.completed_at,
           axis_scores: d.axis_scores,
+          crm_status: d.crm_status ?? 'new',
+          internal_notes: d.internal_notes ?? null,
           organizations: org,
           respondents: respondent,
           answers: answErr ? [] : (answers ?? []),
@@ -104,11 +159,18 @@ export const handler = async (event: NetlifyEvent): Promise<NetlifyResponse> => 
   }
 
   // ── List view ─────────────────────────────────────────────────────────────
-  const { data: diagnostics, error: diagErr } = await supabase
+  const includeDeleted = params.include_deleted === 'true';
+
+  let listQuery = supabase
     .from('diagnostics')
-    .select('id, total_score, maturity_level, status, completed_at, axis_scores, organization_id, respondent_id')
-    .eq('status', 'completed')
-    .order('completed_at', { ascending: false });
+    .select('id, total_score, maturity_level, status, completed_at, axis_scores, organization_id, respondent_id, crm_status, internal_notes, deleted_at')
+    .eq('status', 'completed');
+
+  if (!includeDeleted) {
+    listQuery = listQuery.is('deleted_at', null);
+  }
+
+  const { data: diagnostics, error: diagErr } = await listQuery.order('completed_at', { ascending: false });
 
   if (diagErr) {
     return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: diagErr.message }) };
@@ -116,7 +178,6 @@ export const handler = async (event: NetlifyEvent): Promise<NetlifyResponse> => 
 
   const rows = diagnostics ?? [];
 
-  // Fetch linked orgs and respondents in bulk
   const orgIds = [...new Set(rows.map((d) => d.organization_id).filter(Boolean))] as string[];
   const respIds = [...new Set(rows.map((d) => d.respondent_id).filter(Boolean))] as string[];
 
@@ -144,6 +205,9 @@ export const handler = async (event: NetlifyEvent): Promise<NetlifyResponse> => 
       total_score: d.total_score,
       maturity_level: d.maturity_level,
       axis_scores: d.axis_scores,
+      crm_status: d.crm_status ?? 'new',
+      internal_notes: d.internal_notes ?? null,
+      deleted_at: d.deleted_at ?? null,
       org_name: org?.name ?? '',
       sector: org?.sector ?? '',
       country: org?.country ?? '',
@@ -157,9 +221,7 @@ export const handler = async (event: NetlifyEvent): Promise<NetlifyResponse> => 
 
   const total = flatData.length;
   const avgScore =
-    total > 0
-      ? Math.round(flatData.reduce((s, d) => s + (d.total_score || 0), 0) / total)
-      : 0;
+    total > 0 ? Math.round(flatData.reduce((s, d) => s + (d.total_score || 0), 0) / total) : 0;
 
   const sectorCounts: Record<string, number> = {};
   flatData.forEach((d) => {

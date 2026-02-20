@@ -1,18 +1,20 @@
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { AdminDiagnosticRow } from '@/types/diagnostic';
+import { AdminDiagnosticRow, CRM_STATUS_CONFIG, CrmStatus } from '@/types/diagnostic';
 import { getMaturityColor, getMaturityLabel } from '@/data/recommendations';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, Eye } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
+import { Download, Eye, Trash2, Loader2 } from 'lucide-react';
 
 type MaturityLevel = 'debutant' | 'intermediaire' | 'avance' | 'expert';
 
@@ -26,33 +28,31 @@ const SECTOR_LABELS: Record<string, string> = {
 interface AdminTableProps {
   data: AdminDiagnosticRow[];
   onView: (row: AdminDiagnosticRow) => void;
+  onDeleteAll: (ids: string[]) => void;
+  password: string;
 }
 
 const MaturityBadge = ({ level }: { level: string }) => {
   const colors = getMaturityColor(level as MaturityLevel);
   const label = getMaturityLabel(level as MaturityLevel);
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border ${colors.text} ${colors.bg} ${colors.border}`}
-    >
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border ${colors.text} ${colors.bg} ${colors.border}`}>
       {label}
     </span>
   );
 };
 
+export const CrmStatusBadge = ({ status }: { status: CrmStatus }) => {
+  const cfg = CRM_STATUS_CONFIG[status] ?? CRM_STATUS_CONFIG.new;
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border ${cfg.className}`}>
+      {cfg.label}
+    </span>
+  );
+};
+
 const exportCSV = (data: AdminDiagnosticRow[]) => {
-  const headers = [
-    'Date',
-    'Entreprise',
-    'Secteur',
-    'Pays',
-    'Taille',
-    'Nom contact',
-    'Email',
-    'Poste',
-    'Score (%)',
-    'Niveau',
-  ];
+  const headers = ['Date', 'Entreprise', 'Secteur', 'Pays', 'Taille', 'Nom contact', 'Email', 'Poste', 'Score (%)', 'Niveau', 'Statut CRM', 'Notes'];
 
   const escape = (v: string | number | null | undefined) => {
     const s = String(v ?? '');
@@ -72,6 +72,8 @@ const exportCSV = (data: AdminDiagnosticRow[]) => {
     escape(d.role),
     d.total_score,
     d.maturity_level,
+    CRM_STATUS_CONFIG[d.crm_status]?.label ?? d.crm_status,
+    escape(d.internal_notes),
   ]);
 
   const csv = [headers, ...rows].map((r) => r.join(',')).join('\n');
@@ -86,91 +88,155 @@ const exportCSV = (data: AdminDiagnosticRow[]) => {
   URL.revokeObjectURL(url);
 };
 
-const AdminTable = ({ data, onView }: AdminTableProps) => {
+const AdminTable = ({ data, onView, onDeleteAll, password }: AdminTableProps) => {
+  const [showDeleteAll, setShowDeleteAll] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAll = async () => {
+    const ids = data.filter((d) => !d.deleted_at).map((d) => d.id);
+    setIsDeleting(true);
+    try {
+      const res = await fetch('/.netlify/functions/admin-diagnostics', {
+        method: 'DELETE',
+        headers: { 'x-admin-password': password, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
+      if (!res.ok) throw new Error('Delete failed');
+      toast.success(`${ids.length} diagnostic${ids.length !== 1 ? 's' : ''} supprimé${ids.length !== 1 ? 's' : ''} (restaurables si besoin)`);
+      onDeleteAll(ids);
+    } catch {
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteAll(false);
+      setConfirmText('');
+    }
+  };
+
   return (
+    <>
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {data.length} diagnostic{data.length !== 1 ? 's' : ''}
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => exportCSV(data)}
-          disabled={data.length === 0}
-          className="gap-2"
-        >
+    <div className="flex items-center justify-between">
+      <p className="text-sm text-muted-foreground">
+        {data.length} diagnostic{data.length !== 1 ? 's' : ''}
+      </p>
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={() => exportCSV(data)} disabled={data.length === 0} className="gap-2">
           <Download className="h-4 w-4" />
           Exporter CSV
         </Button>
-      </div>
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Entreprise</TableHead>
-              <TableHead className="hidden md:table-cell">Secteur</TableHead>
-              <TableHead>Score</TableHead>
-              <TableHead>Niveau</TableHead>
-              <TableHead className="hidden lg:table-cell">Email</TableHead>
-              <TableHead className="w-[60px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  Aucun diagnostic trouvé
-                </TableCell>
-              </TableRow>
-            ) : (
-              data.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => onView(row)}
-                >
-                  <TableCell className="whitespace-nowrap text-sm">
-                    {row.completed_at
-                      ? format(new Date(row.completed_at), 'dd/MM/yyyy', { locale: fr })
-                      : '—'}
-                  </TableCell>
-                  <TableCell className="font-medium max-w-[180px] truncate">
-                    {row.org_name || '—'}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                    {SECTOR_LABELS[row.sector] ?? (row.sector || '—')}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="font-mono">
-                      {row.total_score}%
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <MaturityBadge level={row.maturity_level} />
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground max-w-[200px] truncate">
-                    {row.email || '—'}
-                  </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => onView(row)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        <Button
+          variant="destructive"
+          size="sm"
+          disabled={data.length === 0}
+          onClick={() => { setConfirmText(''); setShowDeleteAll(true); }}
+          className="gap-2"
+        >
+          <Trash2 className="h-4 w-4" />
+          Tout supprimer
+        </Button>
       </div>
     </div>
+
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Entreprise</TableHead>
+            <TableHead className="hidden md:table-cell">Secteur</TableHead>
+            <TableHead>Score</TableHead>
+            <TableHead className="hidden sm:table-cell">Niveau</TableHead>
+            <TableHead>Statut</TableHead>
+            <TableHead className="hidden lg:table-cell">Email</TableHead>
+            <TableHead className="w-[60px]"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                Aucun diagnostic trouvé
+              </TableCell>
+            </TableRow>
+          ) : (
+            data.map((row) => (
+              <TableRow
+                key={row.id}
+                className={`cursor-pointer hover:bg-muted/50 ${row.deleted_at ? 'opacity-50' : ''}`}
+                onClick={() => onView(row)}
+              >
+                <TableCell className="whitespace-nowrap text-sm">
+                  {row.completed_at ? format(new Date(row.completed_at), 'dd/MM/yyyy', { locale: fr }) : '—'}
+                </TableCell>
+                <TableCell className="font-medium max-w-[160px] truncate text-muted-foreground">
+                  {row.org_name || '—'}
+                </TableCell>
+                <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                  {SECTOR_LABELS[row.sector] ?? (row.sector || '—')}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="secondary" className="font-mono">{row.total_score}%</Badge>
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  <div className="flex flex-wrap items-center gap-1">
+                    <MaturityBadge level={row.maturity_level} />
+                    {row.deleted_at && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        Supprimé le {format(new Date(row.deleted_at), 'dd/MM/yy')}
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <CrmStatusBadge status={row.crm_status ?? 'new'} />
+                </TableCell>
+                <TableCell className="hidden lg:table-cell text-sm text-muted-foreground max-w-[180px] truncate">
+                  {row.email || '—'}
+                </TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onView(row)}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
+    </div>
+
+    <AlertDialog open={showDeleteAll} onOpenChange={(open) => { setShowDeleteAll(open); if (!open) setConfirmText(''); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>⚠️ Supprimer tous les diagnostics affichés ?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Vous allez masquer les <strong>{data.length}</strong> diagnostic{data.length !== 1 ? 's' : ''} actuellement visibles (après filtres). Ils pourront être restaurés ultérieurement.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="px-1 py-2">
+          <Input
+            placeholder="Tapez SUPPRIMER pour confirmer"
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+          />
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDeleteAll}
+            disabled={confirmText !== 'SUPPRIMER' || isDeleting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            Supprimer tout
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };
 

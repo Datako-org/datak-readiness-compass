@@ -77,6 +77,83 @@ Message : "Diagnostic détaillé bientôt disponible pour votre secteur"
 
 ---
 
+## État actuel
+
+### ✅ Complété (Février 2026)
+
+#### 1. Diagnostic sectoriel
+- **3 secteurs opérationnels** : Transport & Logistique, Commerce & Distribution, Énergie / Mines
+- 10 questions sectorielles par secteur
+- Scoring pondéré 40/40/20
+- 4 niveaux de maturité (Débutant → Expert)
+- Recommandations personnalisées par niveau
+- Tests validés pour Transport (scores 4% et 53%)
+
+#### 2. Page Admin (/admin)
+- Authentification par mot de passe (sessionStorage)
+- Liste complète des diagnostics avec filtres :
+  - Par secteur
+  - Par niveau de maturité
+  - Par plage de dates
+- Stats globales :
+  - Total diagnostics
+  - Répartition par secteur
+  - Score moyen global
+- Détail complet de chaque diagnostic (modal Sheet)
+- Export CSV des diagnostics
+
+#### 3. Mini CRM intégré
+- Système de statuts commerciaux :
+  - Nouveau (par défaut)
+  - Contacté
+  - RDV programmé
+  - Proposition envoyée
+  - Gagné
+  - Perdu
+- Notes internes par lead
+- Badges colorés par statut dans la table
+- Filtres par statut
+- Stats CRM :
+  - Nombre de nouveaux leads
+  - Nombre en cours de traitement
+  - Nombre de RDV programmés
+  - Nombre de deals gagnés
+  - Taux de conversion
+- Mise à jour temps réel (optimistic update)
+
+### 🔄 En cours / À faire
+
+#### Priorité 1 : Automation & Nurturing
+1. **Email automatique (N8N)**
+   - Webhook Supabase → N8N
+   - Email personnalisé selon niveau de maturité
+   - PDF résultats en pièce jointe
+   - Ajout automatique dans CRM
+
+#### Priorité 2 : Démos commerciales
+2. **Démo Transport & Logistique**
+   - Excel flotte bordélique → Dashboard Streamlit/Looker
+   - Workflow N8N (alertes maintenance)
+   
+3. **Démo Commerce & Distribution**
+   - Excel ventes multi-sites → Dashboard marges
+   - Workflow N8N (alertes rupture stock)
+   
+4. **Démo Énergie / Mines**
+   - Excel production → Dashboard opérationnel
+   - Workflow N8N (incidents/maintenance)
+
+#### Priorité 3 : Optimisations
+5. **Export PDF des résultats**
+   - Rapport branded avec logo Datakö
+   - Scores + visualisations
+   - Recommandations détaillées
+
+6. **Prospection active**
+   - Messages personnalisés par secteur
+   - LinkedIn + Email outreach
+   - 20-30 entreprises cibles par secteur
+
 ## Structure du code
 
 ### Fichiers clés
