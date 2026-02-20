@@ -28,13 +28,17 @@ const AdminDashboard = ({ password, onLogout }: AdminDashboardProps) => {
     crmStatus: '',
   });
   const [selectedDiagnostic, setSelectedDiagnostic] = useState<AdminDiagnosticRow | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       setError('');
       try {
-        const res = await fetch('/.netlify/functions/admin-diagnostics', {
+        const url = showDeleted
+          ? '/.netlify/functions/admin-diagnostics?include_deleted=true'
+          : '/.netlify/functions/admin-diagnostics';
+        const res = await fetch(url, {
           headers: { 'x-admin-password': password },
         });
         if (res.status === 401) { onLogout(); return; }
@@ -52,7 +56,7 @@ const AdminDashboard = ({ password, onLogout }: AdminDashboardProps) => {
       }
     };
     fetchData();
-  }, [password, onLogout]);
+  }, [password, onLogout, showDeleted]);
 
   // CRM stats computed client-side (updates instantly on status change)
   const crmStats = useMemo<CrmStats>(() => {
@@ -96,6 +100,25 @@ const AdminDashboard = ({ password, onLogout }: AdminDashboardProps) => {
     );
   };
 
+  const handleDelete = (id: string) => {
+    setAllData((prev) => prev.filter((row) => row.id !== id));
+    setSelectedDiagnostic(null);
+  };
+
+  const handleRestore = (id: string) => {
+    setAllData((prev) =>
+      prev.map((row) => (row.id === id ? { ...row, deleted_at: null } : row))
+    );
+    setSelectedDiagnostic((prev) =>
+      prev?.id === id ? { ...prev, deleted_at: null } : prev
+    );
+  };
+
+  const handleDeleteAll = (ids: string[]) => {
+    const idSet = new Set(ids);
+    setAllData((prev) => prev.filter((row) => !idSet.has(row.id)));
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card sticky top-0 z-10">
@@ -127,13 +150,19 @@ const AdminDashboard = ({ password, onLogout }: AdminDashboardProps) => {
 
         {!isLoading && !error && (
           <>
-            {stats && <AdminStats_ stats={stats} crmStats={crmStats} />}
+            {stats && <AdminStats_ stats={stats} crmStats={crmStats} showDeleted={showDeleted} />}
 
             <div className="rounded-lg border bg-card p-4">
-              <AdminFilters filters={filters} onChange={setFilters} crmCounts={crmCounts} />
+              <AdminFilters
+                filters={filters}
+                onChange={setFilters}
+                crmCounts={crmCounts}
+                showDeleted={showDeleted}
+                onShowDeletedChange={setShowDeleted}
+              />
             </div>
 
-            <AdminTable data={filteredData} onView={setSelectedDiagnostic} />
+            <AdminTable data={filteredData} onView={setSelectedDiagnostic} onDeleteAll={handleDeleteAll} password={password} />
           </>
         )}
       </main>
@@ -143,6 +172,8 @@ const AdminDashboard = ({ password, onLogout }: AdminDashboardProps) => {
         onClose={() => setSelectedDiagnostic(null)}
         password={password}
         onUpdate={handleStatusUpdate}
+        onDelete={handleDelete}
+        onRestore={handleRestore}
       />
     </div>
   );

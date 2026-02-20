@@ -17,7 +17,7 @@ const corsHeaders = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, x-admin-password',
-  'Access-Control-Allow-Methods': 'GET, PATCH, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, PATCH, DELETE, OPTIONS',
 };
 
 export const handler = async (event: NetlifyEvent): Promise<NetlifyResponse> => {
@@ -66,6 +66,7 @@ export const handler = async (event: NetlifyEvent): Promise<NetlifyResponse> => 
     const updates: Record<string, unknown> = {};
     if (body.crm_status !== undefined) updates.crm_status = body.crm_status;
     if (body.internal_notes !== undefined) updates.internal_notes = body.internal_notes;
+    if (body.deleted_at !== undefined) updates.deleted_at = body.deleted_at;
 
     const { error } = await supabase
       .from('diagnostics')
@@ -77,6 +78,32 @@ export const handler = async (event: NetlifyEvent): Promise<NetlifyResponse> => 
     }
 
     return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ success: true }) };
+  }
+
+  // ── DELETE — soft delete bulk ─────────────────────────────────────────────
+  if (event.httpMethod === 'DELETE') {
+    let body: Record<string, unknown> = {};
+    try {
+      body = JSON.parse(event.body || '{}');
+    } catch {
+      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Invalid JSON' }) };
+    }
+
+    const ids = body.ids as string[];
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Missing or empty ids' }) };
+    }
+
+    const { error } = await supabase
+      .from('diagnostics')
+      .update({ deleted_at: new Date().toISOString() })
+      .in('id', ids);
+
+    if (error) {
+      return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: error.message }) };
+    }
+
+    return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ success: true, count: ids.length }) };
   }
 
   const params = event.queryStringParameters || {};
@@ -132,11 +159,18 @@ export const handler = async (event: NetlifyEvent): Promise<NetlifyResponse> => 
   }
 
   // ── List view ─────────────────────────────────────────────────────────────
-  const { data: diagnostics, error: diagErr } = await supabase
+  const includeDeleted = params.include_deleted === 'true';
+
+  let listQuery = supabase
     .from('diagnostics')
-    .select('id, total_score, maturity_level, status, completed_at, axis_scores, organization_id, respondent_id, crm_status, internal_notes')
-    .eq('status', 'completed')
-    .order('completed_at', { ascending: false });
+    .select('id, total_score, maturity_level, status, completed_at, axis_scores, organization_id, respondent_id, crm_status, internal_notes, deleted_at')
+    .eq('status', 'completed');
+
+  if (!includeDeleted) {
+    listQuery = listQuery.is('deleted_at', null);
+  }
+
+  const { data: diagnostics, error: diagErr } = await listQuery.order('completed_at', { ascending: false });
 
   if (diagErr) {
     return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: diagErr.message }) };
@@ -173,6 +207,7 @@ export const handler = async (event: NetlifyEvent): Promise<NetlifyResponse> => 
       axis_scores: d.axis_scores,
       crm_status: d.crm_status ?? 'new',
       internal_notes: d.internal_notes ?? null,
+      deleted_at: d.deleted_at ?? null,
       org_name: org?.name ?? '',
       sector: org?.sector ?? '',
       country: org?.country ?? '',
