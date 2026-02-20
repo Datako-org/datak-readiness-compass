@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import {
   AdminDiagnosticRow, AdminDiagnosticAnswer, DimensionScore,
   CrmStatus, CRM_STATUS_CONFIG,
@@ -15,7 +17,12 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Loader2, CheckCircle2 } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
+import { Loader2, CheckCircle2, Trash2 } from 'lucide-react';
 
 type MaturityLevel = 'debutant' | 'intermediaire' | 'avance' | 'expert';
 
@@ -35,6 +42,8 @@ interface AdminDiagnosticDetailProps {
   onClose: () => void;
   password: string;
   onUpdate: (id: string, crm_status: CrmStatus, internal_notes: string | null) => void;
+  onDelete: (id: string) => void;
+  onRestore: (id: string) => void;
 }
 
 const SECTOR_LABELS: Record<string, string> = {
@@ -76,7 +85,7 @@ const getAnswerLabel = (
   return { questionText, answerLabel: question.options.find((o) => o.value === answerValue)?.label ?? answerValue };
 };
 
-const AdminDiagnosticDetail = ({ diagnostic, onClose, password, onUpdate }: AdminDiagnosticDetailProps) => {
+const AdminDiagnosticDetail = ({ diagnostic, onClose, password, onUpdate, onDelete, onRestore }: AdminDiagnosticDetailProps) => {
   const [detail, setDetail] = useState<DetailData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -86,6 +95,10 @@ const AdminDiagnosticDetail = ({ diagnostic, onClose, password, onUpdate }: Admi
   const [localNotes, setLocalNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   // Reset CRM state when a new diagnostic is opened
   useEffect(() => {
@@ -155,12 +168,55 @@ const AdminDiagnosticDetail = ({ diagnostic, onClose, password, onUpdate }: Admi
     }
   };
 
+  const handleDelete = async () => {
+    if (!diagnostic) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch('/.netlify/functions/admin-diagnostics', {
+        method: 'PATCH',
+        headers: { 'x-admin-password': password, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: diagnostic.id, deleted_at: new Date().toISOString() }),
+      });
+      if (!res.ok) throw new Error('Delete failed');
+      toast.success('Diagnostic supprimé (restaurable si besoin)');
+      onDelete(diagnostic.id);
+      onClose();
+    } catch {
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!diagnostic) return;
+    setIsRestoring(true);
+    try {
+      const res = await fetch('/.netlify/functions/admin-diagnostics', {
+        method: 'PATCH',
+        headers: { 'x-admin-password': password, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: diagnostic.id, deleted_at: null }),
+      });
+      if (!res.ok) throw new Error('Restore failed');
+      toast.success('Diagnostic restauré avec succès');
+      onRestore(diagnostic.id);
+    } catch {
+      toast.error('Erreur lors de la restauration');
+    } finally {
+      setIsRestoring(false);
+      setShowRestoreConfirm(false);
+    }
+  };
+
+  const isDeleted = !!(diagnostic?.deleted_at);
   const sector = detail?.organizations?.sector ?? diagnostic?.sector ?? '';
   const maturityLevel = (detail?.maturity_level ?? diagnostic?.maturity_level ?? 'debutant') as MaturityLevel;
   const maturityColors = getMaturityColor(maturityLevel);
   const recommendation = getRecommendations(sector, maturityLevel);
 
   return (
+    <>
     <Sheet open={!!diagnostic} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="w-full sm:max-w-[620px] overflow-y-auto">
         <SheetHeader className="pb-4">
@@ -171,6 +227,15 @@ const AdminDiagnosticDetail = ({ diagnostic, onClose, password, onUpdate }: Admi
             </span>
           </div>
         </SheetHeader>
+
+        {isDeleted && diagnostic?.deleted_at && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <Trash2 className="h-4 w-4 shrink-0" />
+            <span>
+              Supprimé le {format(new Date(diagnostic.deleted_at), 'dd/MM/yyyy à HH:mm', { locale: fr })} — masqué de la liste principale.
+            </span>
+          </div>
+        )}
 
         {isLoading && (
           <div className="flex justify-center py-12">
@@ -238,6 +303,29 @@ const AdminDiagnosticDetail = ({ diagnostic, onClose, password, onUpdate }: Admi
                       <CheckCircle2 className="h-4 w-4" />
                       Sauvegardé
                     </span>
+                  )}
+                </div>
+
+                <div className="pt-2">
+                  {isDeleted ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 border-green-500/50 text-green-500 hover:bg-green-500/10 hover:text-green-400"
+                      onClick={() => setShowRestoreConfirm(true)}
+                    >
+                      ♻️ Restaurer ce diagnostic
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => setShowDeleteConfirm(true)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Supprimer ce diagnostic
+                    </Button>
                   )}
                 </div>
               </div>
@@ -330,6 +418,47 @@ const AdminDiagnosticDetail = ({ diagnostic, onClose, password, onUpdate }: Admi
         )}
       </SheetContent>
     </Sheet>
+
+    <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Supprimer ce diagnostic ?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Ce diagnostic sera masqué de la liste. Il pourra être restauré ultérieurement si besoin.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            Supprimer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <AlertDialog open={showRestoreConfirm} onOpenChange={setShowRestoreConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Restaurer ce diagnostic ?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Le diagnostic redeviendra visible dans la liste principale.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isRestoring}>Annuler</AlertDialogCancel>
+          <AlertDialogAction onClick={handleRestore} disabled={isRestoring}>
+            {isRestoring ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            Restaurer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };
 

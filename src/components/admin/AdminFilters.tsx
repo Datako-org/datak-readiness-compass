@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -22,9 +23,11 @@ interface AdminFiltersProps {
   filters: FilterState;
   onChange: (filters: FilterState) => void;
   crmCounts: Record<string, number>;
+  showDeleted: boolean;
+  onShowDeletedChange: (value: boolean) => void;
 }
 
-const AdminFilters = ({ filters, onChange, crmCounts }: AdminFiltersProps) => {
+const AdminFilters = ({ filters, onChange, crmCounts, showDeleted, onShowDeletedChange }: AdminFiltersProps) => {
   const update = (key: keyof FilterState, value: string) => {
     onChange({ ...filters, [key]: value });
   };
@@ -37,6 +40,17 @@ const AdminFilters = ({ filters, onChange, crmCounts }: AdminFiltersProps) => {
     filters.sector || filters.level || filters.dateFrom || filters.dateTo || filters.crmStatus;
 
   return (
+    <div className="space-y-3">
+    <div className="flex items-center gap-2">
+      <Switch
+        id="show-deleted"
+        checked={showDeleted}
+        onCheckedChange={onShowDeletedChange}
+      />
+      <label htmlFor="show-deleted" className="text-sm text-muted-foreground cursor-pointer select-none">
+        Afficher les diagnostics supprimés
+      </label>
+    </div>
     <div className="flex flex-wrap gap-3 items-end">
       <div className="flex-1 min-w-[150px]">
         <Select
@@ -122,6 +136,7 @@ const AdminFilters = ({ filters, onChange, crmCounts }: AdminFiltersProps) => {
           Réinitialiser
         </Button>
       )}
+    </div>
     </div>
   );
 };
