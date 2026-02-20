@@ -1,0 +1,202 @@
+# Claude Code Rules - Projet Diagnostic Datakö
+
+## Principes généraux
+
+### Toujours lire CONTEXT.md en premier
+Avant toute modification ou suggestion, consulter CONTEXT.md pour comprendre :
+- Architecture actuelle
+- Décisions déjà prises
+- État d'avancement
+
+### Préférer les petites modifications incrémentales
+- Éviter les refactos massives
+- Proposer des changements testables rapidement
+- Garder la compatibilité avec l'existant
+
+### Respecter la structure existante
+- Ne pas réorganiser l'arborescence sans raison
+- Suivre les patterns déjà établis
+- Maintenir la cohérence du code
+
+---
+
+## Code TypeScript/React
+
+### Types et interfaces
+- Toujours typer explicitement (pas de `any`)
+- Utiliser les interfaces définies dans `/src/types/diagnostic.types.ts`
+- Créer de nouveaux types si nécessaire, pas de contournement
+
+### Composants React
+- Composants fonctionnels uniquement (pas de class components)
+- Props typées avec interfaces
+- Hooks en début de composant
+- Déstructurer les props
+```typescript
+// ✅ Bon
+interface StepProps {
+  onNext: () => void;
+  formData: DiagnosticData;
+}
+
+export const Step: React.FC<StepProps> = ({ onNext, formData }) => {
+  // hooks ici
+  return <div>...</div>;
+};
+
+// ❌ Éviter
+export const Step = (props: any) => { ... }
+```
+
+### État et logique métier
+- Utiliser `useDiagnostic` hook pour logique commune
+- Pas de logique métier dans les composants d'UI
+- State local uniquement si spécifique au composant
+
+---
+
+## Styling
+
+### Tailwind CSS
+- Utiliser les utility classes Tailwind
+- Éviter le CSS custom sauf si vraiment nécessaire
+- Respecter le design system (couleurs, espacements)
+
+### shadcn-ui
+- Utiliser les composants shadcn existants
+- Ne pas recréer des composants qui existent déjà
+- Suivre la doc shadcn pour customisation
+
+---
+
+## Data et Supabase
+
+### Sauvegarde diagnostic
+- Toujours valider les données avant insert
+- Gérer les erreurs (try/catch)
+- Logger les erreurs pour debug
+
+### Structure des questions
+- Respecter le format dans `questionsBySector.ts`
+- Chaque question a : text, options (avec scores), type
+- Q10 = multi-choix (array), autres = single-choice
+
+### Scoring
+- Toujours utiliser la pondération 40/40/20
+- Arrondir les scores à l'entier le plus proche
+- Vérifier les seuils de maturité (0-30, 31-60, 61-85, 86-100)
+
+---
+
+## Recommandations sectorielles
+
+### Format standard
+Chaque recommandation doit avoir :
+- `title` : Titre accrocheur et actionnable
+- `actions` : Array de 3-4 actions concrètes
+- `impact` : Array de 2-3 bénéfices mesurables
+- `roi` : 1 phrase de ROI sans montants en euros
+
+### Ton et langage
+- Ton professionnel mais accessible
+- Pas de jargon inutile
+- Exemples concrets métier
+- Bénéfices chiffrés en % ou temps, jamais en euros
+
+---
+
+## Git et versioning
+
+### Commits
+- Messages clairs et descriptifs
+- Format : `[scope] description`
+- Exemples :
+  - `[fix] Correction calcul score auto`
+  - `[feat] Ajout secteur Énergie/Mines`
+  - `[refactor] Simplification hook useDiagnostic`
+
+### Branches
+- `main` : code production
+- `dev` : développement en cours
+- `feature/nom` : nouvelle fonctionnalité
+
+---
+
+## Tests et validation
+
+### Avant chaque push
+- Tester le parcours complet pour le secteur modifié
+- Vérifier que les autres secteurs fonctionnent toujours
+- Build réussi (`npm run build`)
+- Pas d'erreurs TypeScript
+
+### Scénarios de test minimum
+- Parcours débutant (réponses basses)
+- Parcours intermédiaire (réponses moyennes)
+- Q10 multi-choix fonctionne
+- Sauvegarde Supabase OK
+- CTAs cliquables
+
+---
+
+## Bonnes pratiques spécifiques au projet
+
+### Secteurs
+- Toujours créer questions adaptées au métier
+- Pas de questions génériques "data" si on peut être spécifique
+- Exemples concrets dans les questions (flottes, stocks, équipements)
+
+### Impact et ROI
+- Jamais de montants en euros dans les recommandations
+- Privilégier : pourcentages, gains de temps, bénéfices qualitatifs
+- Rester crédible (pas de promesses irréalistes)
+
+### UX
+- Navigation fluide entre étapes
+- Toujours pouvoir revenir en arrière
+- Sauvegarder automatiquement (localStorage)
+- Messages d'erreur clairs si validation échoue
+
+---
+
+## Communication avec l'utilisateur (Abdou)
+
+### Proposer, ne pas imposer
+- Expliquer les options
+- Donner les pour/contre
+- Laisser le choix final
+
+### Être transparent
+- Si tu ne comprends pas une demande, demander clarification
+- Si tu n'es pas sûr d'une approche, proposer des alternatives
+- Si tu détectes un problème, le signaler
+
+### Documenter les changements
+- Expliquer ce qui a été modifié
+- Pourquoi cette approche
+- Ce qu'il reste à faire/tester
+
+---
+
+## Anti-patterns à éviter
+
+❌ Over-engineering (garder simple)
+❌ Modifier plusieurs fichiers en une fois sans test
+❌ Ignorer les types TypeScript
+❌ Hardcoder des valeurs qui devraient être configurables
+❌ Créer de nouveaux patterns sans raison
+❌ Copier-coller du code au lieu de factoriser
+❌ Montants en euros dans les recommandations
+
+---
+
+## En cas de doute
+
+1. Consulter CONTEXT.md
+2. Vérifier la structure existante
+3. Proposer plusieurs options
+4. Demander validation avant grosse modification
+
+---
+
+*Ces règles assurent la cohérence, la qualité et la maintenabilité du projet.*
