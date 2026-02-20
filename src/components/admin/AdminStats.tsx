@@ -12,9 +12,10 @@ const SECTOR_LABELS: Record<string, string> = {
 interface AdminStatsProps {
   stats: AdminStatsType;
   crmStats: CrmStats;
+  showDeleted: boolean;
 }
 
-const AdminStats = ({ stats, crmStats }: AdminStatsProps) => {
+const AdminStats = ({ stats, crmStats, showDeleted }: AdminStatsProps) => {
   const sectorEntries = Object.entries(stats.sectorCounts);
 
   return (
@@ -28,7 +29,9 @@ const AdminStats = ({ stats, crmStats }: AdminStatsProps) => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground mt-1">diagnostics complétés</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {showDeleted ? 'tous diagnostics' : 'diagnostics actifs'}
+            </p>
           </CardContent>
         </Card>
 

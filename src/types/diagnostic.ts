@@ -31,6 +31,7 @@ export interface AdminDiagnosticRow {
   phone: string | null;
   crm_status: CrmStatus;
   internal_notes: string | null;
+  deleted_at?: string | null;
 }
 
 export interface AdminDiagnosticAnswer {
