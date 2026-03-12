@@ -200,6 +200,37 @@ export const ResultsPage = ({ result, onRestart }: ResultsPageProps) => {
             </motion.div>
           </motion.div>
 
+          {/* Fleet Manager CTA (transport only) */}
+          {result.sector === 'transport' && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 }}
+              className="bg-card rounded-xl p-8 border border-green-500/30 mb-8"
+            >
+              <h2 className="text-xl font-semibold mb-2 text-center">
+                Fleet Manager par Datakö
+              </h2>
+              <p className="text-muted-foreground text-center mb-6">
+                Saisissez une rotation, voyez instantanément votre gain net. Marges, commissions, répartitions — tout est calculé pour vous.
+              </p>
+              <div className="flex justify-center">
+                <Button
+                  className="bg-green-600 text-white hover:bg-green-700"
+                  onClick={() => {
+                    const message = encodeURIComponent(
+                      `Bonjour,\n\nSuite à mon diagnostic Datakö (score : ${result.percentage}%, niveau : ${maturityLabel}), je souhaite réserver une démo Fleet Manager.\n\nMerci !`
+                    );
+                    window.open(`https://wa.me/+224612434545?text=${message}`, '_blank');
+                  }}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Réserver une démo Fleet Manager
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
           {/* CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -205,6 +205,27 @@ export const useDiagnostic = () => {
         score: answer.score,
       }));
 
+      // Store transport qualification data as answers (not scored)
+      if (formData.organization.sector === 'transport') {
+        const org = formData.organization;
+        const qualFields = [
+          { id: 'tl_qual_activity', value: org.activity_type },
+          { id: 'tl_qual_product', value: org.product_type },
+          { id: 'tl_qual_fleet_size', value: org.fleet_size },
+          { id: 'tl_qual_fleet_ownership', value: org.fleet_ownership },
+        ];
+        qualFields.forEach(f => {
+          if (f.value) {
+            answersToInsert.push({
+              diagnostic_id: diagnosticData.id,
+              question_id: f.id,
+              answer_value: f.value,
+              score: 0,
+            });
+          }
+        });
+      }
+
       if (answersToInsert.length > 0) {
         const { error: answersError } = await supabase
           .from('answers')
